@@ -1,3 +1,5 @@
+import type { Game } from "../domain/types";
+
 type Props = {
   onNext: () => void;
   onRestart: () => void;

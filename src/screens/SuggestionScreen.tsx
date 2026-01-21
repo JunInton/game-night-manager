@@ -1,12 +1,9 @@
+import type { Game } from "../domain/types";
+
 type Props = {
   game: Game;
   onNext: () => void;
 };
-
-type Game = {
-  name: string;
-  weight: "light" | "heavy";
-}
 
 export default function SuggestionScreen({ game, onNext }: Props) {
   return (

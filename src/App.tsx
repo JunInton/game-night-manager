@@ -2,14 +2,10 @@ import { useState } from "react";
 import SetupScreen from "./screens/SetupScreen";
 import SuggestionScreen from "./screens/SuggestionScreen";
 import ConfirmScreen from "./screens/ConfirmScreen";
-import suggestNextGame from "./suggestNextGame";
+import suggestNextGame from "./domain/suggestNextGame";
+import type { Game } from "./domain/types";
 
 type Screen = "setup" | "suggestion" | "confirm";
-
-type Game = {
-  name: string;
-  weight: "light" | "heavy";
-}
 
 type SessionState = {
   games: Game[];
@@ -30,7 +26,7 @@ function App() {
   return (
     <>
       <div style={{ padding: 24 }}>
-        <h1>Game Night Sequencer</h1>
+        <h1>Board Game Sequencer</h1>
       </div>
       <div>
         {screen === "setup" && (

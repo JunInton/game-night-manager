@@ -1,7 +1,4 @@
-type Game = {
-  name: string;
-  weight: "light" | "heavy";
-}
+import type { Game } from "./types";
 
 export default function suggestNextGame(
   games: Game[],

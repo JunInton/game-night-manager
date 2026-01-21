@@ -1,11 +1,8 @@
+import type { Game } from "../domain/types";
+
 type Props = {
   onNext: (games: Game[]) => void;
 };
-
-type Game = {
-  name: string;
-  weight: "light" | "heavy";
-}
 
 const demoGames: Game[] = [
   { name: "Roll For It", weight: "light" },
