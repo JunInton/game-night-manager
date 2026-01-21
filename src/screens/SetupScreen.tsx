@@ -1,8 +1,13 @@
 type Props = {
-  onNext: () => void;
+  onNext: (games: Game[]) => void;
 };
 
-const demoGames = [
+type Game = {
+  name: string;
+  weight: "light" | "heavy";
+}
+
+const demoGames: Game[] = [
   { name: "Roll For It", weight: "light" },
   { name: "Gloomhaven", weight: "heavy" },
   { name: "Spirit Island", weight: "heavy" },
@@ -19,7 +24,7 @@ export default function SetupScreen({ onNext }: Props) {
       <h2>Setup</h2>
       <p>Enter games and session constraints.</p>
       <button onClick={() => onNext(demoGames)}>Use sample games</button>
-      <button onClick={onNext}>Continue</button>
+      {/* <button onClick={onNext}>Continue</button> */}
     </>
   );
 }

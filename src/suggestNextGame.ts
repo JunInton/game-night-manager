@@ -10,7 +10,7 @@ export default function suggestNextGame(
   if (!lastPlayed) return games[0];
 
   if (lastPlayed.weight === "heavy") {
-    return games.find(g = games.weight === "light");
+    return games.find(g => g.weight === "light");
   }
 
   return games.find(g => g.weight === "heavy");

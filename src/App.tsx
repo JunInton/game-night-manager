@@ -2,6 +2,7 @@ import { useState } from "react";
 import SetupScreen from "./screens/SetupScreen";
 import SuggestionScreen from "./screens/SuggestionScreen";
 import ConfirmScreen from "./screens/ConfirmScreen";
+import suggestNextGame from "./suggestNextGame";
 
 type Screen = "setup" | "suggestion" | "confirm";
 
@@ -12,7 +13,7 @@ type Game = {
 
 type SessionState = {
   games: Game[];
-  lastPlayed: Game;
+  lastPlayed?: Game;
 }
 
 function App() {
@@ -21,6 +22,11 @@ function App() {
     games: [],
   });
 
+  const nextGame = suggestNextGame(
+    session.games,
+    session.lastPlayed
+  );
+
   return (
     <>
       <div style={{ padding: 24 }}>
@@ -28,11 +34,17 @@ function App() {
       </div>
       <div>
         {screen === "setup" && (
-          <SetupScreen onNext={() => setScreen("suggestion")} />
+          <SetupScreen 
+          onNext={(games) => {
+            setSession({ games });
+            setScreen("suggestion");
+          }} />
         )}
 
-        {screen === "suggestion" && (
-          <SuggestionScreen onNext={() => setScreen("confirm")} />
+        {screen === "suggestion" && nextGame && (
+          <SuggestionScreen 
+            game={nextGame}
+            onNext={() => setScreen("confirm")} />
         )}
 
         {screen === "confirm" && (
