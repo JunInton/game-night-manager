@@ -12,6 +12,7 @@ export default function SuggestionScreen({ game, onNext }: Props) {
       <p>Here are some suggestions for the next game.</p>
       <p>You should play:</p>
       <h3>{game.name}</h3>
+      <p>Weight: {game.weight}</p>
       <button onClick={onNext}>Continue</button>
     </>
   );

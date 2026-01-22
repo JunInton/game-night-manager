@@ -43,8 +43,29 @@ function App() {
             onNext={() => setScreen("confirm")} />
         )}
 
-        {screen === "confirm" && (
-          <ConfirmScreen onNext={() => setScreen("suggestion")} onRestart={() => setScreen("setup")} />
+        {screen === "confirm" && nextGame && (
+          <ConfirmScreen 
+          game={nextGame}
+          onConfirm={() => {
+            setSession({
+              ...session,
+              lastPlayed: nextGame,
+            });
+            setScreen("suggestion");
+          }}
+          onVeto={() => {
+            setSession({
+              ...session,
+              games: session.games.filter(
+                (g) => g.name !== nextGame.name
+              ),
+            });
+          }}
+          onRestart={() => {
+            setSession({ games: [] });
+            setScreen("setup");
+          }}
+          />
         )}
       </div>
     </>
