@@ -24,51 +24,53 @@ function App() {
   );
 
   return (
-    <>
-      <div style={{ padding: 24 }}>
-        <h1>Board Game Sequencer</h1>
-      </div>
-      <div>
-        {screen === "setup" && (
-          <SetupScreen 
-          onNext={(games) => {
-            setSession({ games });
-            setScreen("suggestion");
-          }} />
-        )}
+    <div className="app-root">
+      <div className="app-frame">
+        <div style={{ padding: 24 }}>
+          <h1>Board Game Sequencer</h1>
+        </div>
+        <div>
+          {screen === "setup" && (
+            <SetupScreen 
+            onNext={(games) => {
+              setSession({ games });
+              setScreen("suggestion");
+            }} />
+          )}
 
-        {screen === "suggestion" && nextGame && (
-          <SuggestionScreen 
+          {screen === "suggestion" && nextGame && (
+            <SuggestionScreen 
+              game={nextGame}
+              onNext={() => setScreen("confirm")} />
+          )}
+
+          {screen === "confirm" && nextGame && (
+            <ConfirmScreen 
             game={nextGame}
-            onNext={() => setScreen("confirm")} />
-        )}
-
-        {screen === "confirm" && nextGame && (
-          <ConfirmScreen 
-          game={nextGame}
-          onConfirm={() => {
-            setSession({
-              ...session,
-              lastPlayed: nextGame,
-            });
-            setScreen("suggestion");
-          }}
-          onVeto={() => {
-            setSession({
-              ...session,
-              games: session.games.filter(
-                (g) => g.name !== nextGame.name
-              ),
-            });
-          }}
-          onRestart={() => {
-            setSession({ games: [] });
-            setScreen("setup");
-          }}
-          />
-        )}
+            onConfirm={() => {
+              setSession({
+                ...session,
+                lastPlayed: nextGame,
+              });
+              setScreen("suggestion");
+            }}
+            onVeto={() => {
+              setSession({
+                ...session,
+                games: session.games.filter(
+                  (g) => g.name !== nextGame.name
+                ),
+              });
+            }}
+            onRestart={() => {
+              setSession({ games: [] });
+              setScreen("setup");
+            }}
+            />
+          )}
+        </div>
       </div>
-    </>
+    </div>
   )
 }
 
