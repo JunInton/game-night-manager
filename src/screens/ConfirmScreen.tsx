@@ -14,7 +14,7 @@ export default function ConfirmScreen({ game, onConfirm, onVeto, onRestart }: Pr
       <p>Do you want to play:</p>
       <h3>{game.name}</h3>
       <p>Weight: {game.weight}</p>
-      <button onClick={onVeto}>Veto</button>
+      <button onClick={onVeto}>Nope</button>
       <button onClick={onConfirm}>Play this</button>
       <button onClick={onRestart}>Restart</button>
     </>

@@ -8,8 +8,8 @@ type Props = {
 export default function SuggestionScreen({ game, onNext }: Props) {
   return (
     <>
-      <h2>Suggestions</h2>
-      <p>Here are some suggestions for the next game.</p>
+      <h2>Suggestion</h2>
+      <p>Here's a suggestion for the next game.</p>
       <p>You should play:</p>
       <h3>{game.name}</h3>
       <p>Weight: {game.weight}</p>

@@ -3,6 +3,7 @@ import SetupScreen from "./screens/SetupScreen";
 import SuggestionScreen from "./screens/SuggestionScreen";
 import ConfirmScreen from "./screens/ConfirmScreen";
 import suggestNextGame from "./domain/suggestNextGame";
+import NoResultsScreen from "./screens/NoResultsScreen";
 import type { Game } from "./domain/types";
 
 type Screen = "setup" | "suggestion" | "confirm";
@@ -38,10 +39,26 @@ function App() {
             }} />
           )}
 
-          {screen === "suggestion" && nextGame && (
+          {/* {screen === "suggestion" && nextGame && (
             <SuggestionScreen 
               game={nextGame}
               onNext={() => setScreen("confirm")} />
+          )} */}
+
+          {screen === "suggestion" && (
+            nextGame ? (
+              <SuggestionScreen 
+              game={nextGame}
+              onNext={() => setScreen("confirm")}
+              />
+            ) : (
+              <NoResultsScreen
+                onRestart={() => {
+                  setSession({ games: [] });
+                  setScreen("setup");
+                }}
+              />
+            )
           )}
 
           {screen === "confirm" && nextGame && (
@@ -49,7 +66,7 @@ function App() {
             game={nextGame}
             onConfirm={() => {
               setSession({
-                ...session,
+                games: session.games.filter((g) => g.name !== nextGame.name),
                 lastPlayed: nextGame,
               });
               setScreen("suggestion");
@@ -61,6 +78,7 @@ function App() {
                   (g) => g.name !== nextGame.name
                 ),
               });
+              setScreen("suggestion");
             }}
             onRestart={() => {
               setSession({ games: [] });
