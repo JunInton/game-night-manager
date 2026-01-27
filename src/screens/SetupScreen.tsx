@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { Game } from "../domain/types";
+import { GameSearchInput } from "../components/GameSearchInput";
 
 type Props = {
   onNext: (games: Game[]) => void;
@@ -18,34 +20,41 @@ const demoGames: Game[] = [
 
 
 export default function SetupScreen({ onNext }: Props) {
+
+  const [search, setSearch] = useState("");
+
+  const filteredGames = demoGames.filter((game) =>
+    game.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+
   return (
     <>
       <h2>Setup</h2>
       <p>Enter games and session constraints.</p>
 
-      <button onClick={() => onNext(demoGames)}>Use sample games</button>
-      {/* <button onClick={onNext}>Continue</button> */}
+      <GameSearchInput value={search} onChange={setSearch} />
+
+      {/* <button onClick={() => onNext(demoGames)}>Use sample games</button> */}
 
       <table style={{ margin: "16px auto", borderCollapse: "collapse" }}>
         <thead>
           <tr>
-            <th style={{ padding: "8px 12px", borderBottom: "1px solid #ccc" }}>
-              Game
-            </th>
-            <th style={{ padding: "8px 12px", borderBottom: "1px solid #ccc" }}>
-              Weight
-            </th>
+            <th>Game</th>
+            <th>Weight</th>
           </tr>
         </thead>
         <tbody>
-          {demoGames.map((game) => (
+          {filteredGames.map((game) => (
             <tr key={game.name}>
-              <td style={{ padding: "6px 12px" }}>{game.name}</td>
-              <td style={{ padding: "6px 12px" }}>{game.weight}</td>
+              <td>{game.name}</td>
+              <td>{game.weight}</td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      <button onClick={() => onNext(filteredGames)}>Use selected games</button>
     </>
   );
 }
