@@ -13,20 +13,20 @@ export function GameSearchInput({ value, onChange }: Props) {
     onChange
   });
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const ref = useRef<HTMLInputElement>(null);
 
   const { inputProps, labelProps } = useSearchField(
     { 
       label: "Search games",
     },
     state,
-    inputRef
+    ref
   );
 
   return (
     <div>
       <label {...labelProps}>Search</label>
-      <input {...inputProps} ref={inputRef} />
+      <input {...inputProps} ref={ref} />
     </div>
   )
 }
