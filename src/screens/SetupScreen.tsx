@@ -1,4 +1,7 @@
+import { useState } from "react";
 import type { Game } from "../domain/types";
+import { GameSearchInput } from "../components/GameSearchInput";
+import { GameSearchResults } from "../components/GameSearchResults";
 
 type Props = {
   onNext: (games: Game[]) => void;
@@ -15,37 +18,49 @@ const demoGames: Game[] = [
   { name: "Flip 7", weight: "light" },
 ];
 
-
-
 export default function SetupScreen({ onNext }: Props) {
+
+  const [search, setSearch] = useState("");
+  const [selectedGames, setSelectedGames] = useState<Game[]>([]);
+
+  const filteredGames = demoGames.filter((game) =>
+    game.name.toLowerCase().includes(search.toLowerCase()) &&
+    !selectedGames.some((selected) => selected.name === game.name)
+  );
+
+
   return (
     <>
       <h2>Setup</h2>
       <p>Enter games and session constraints.</p>
 
-      <button onClick={() => onNext(demoGames)}>Use sample games</button>
-      {/* <button onClick={onNext}>Continue</button> */}
+      <GameSearchInput value={search} onChange={setSearch} />
 
-      <table style={{ margin: "16px auto", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={{ padding: "8px 12px", borderBottom: "1px solid #ccc" }}>
-              Game
-            </th>
-            <th style={{ padding: "8px 12px", borderBottom: "1px solid #ccc" }}>
-              Weight
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {demoGames.map((game) => (
-            <tr key={game.name}>
-              <td style={{ padding: "6px 12px" }}>{game.name}</td>
-              <td style={{ padding: "6px 12px" }}>{game.weight}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {search && filteredGames.length > 0 && (
+        <GameSearchResults
+          games={filteredGames}
+          onSelect={(game) => {
+            setSelectedGames([...selectedGames, game]);
+            setSearch("");
+          }}
+        />
+      )}
+
+      {selectedGames.length > 0 && (
+        <>
+          <h3>Selected games</h3>
+          <ul>
+            {selectedGames.map((game) => (
+              <li key={game.name}>
+                {game.name} ({game.weight})
+              </li>
+            ))}
+          </ul>
+
+          <button onClick={() => onNext(selectedGames)}>Use selected games</button>
+        </>
+      )}
+
     </>
   );
 }
