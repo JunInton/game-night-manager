@@ -5,6 +5,7 @@ import ConfirmScreen from "./screens/ConfirmScreen";
 import suggestNextGame from "./domain/suggestNextGame";
 import NoResultsScreen from "./screens/NoResultsScreen";
 import type { Game } from "./domain/types";
+import "./App.css";
 
 type Screen = "setup" | "suggestion" | "confirm";
 
@@ -27,8 +28,8 @@ function App() {
   return (
     <div className="app-root">
       <div className="app-frame">
-        <div style={{ padding: 24 }}>
-          <h1>Board Game Sequencer</h1>
+        <div className="app-header">
+          <h1>Game Night Manager</h1>
         </div>
         <div>
           {screen === "setup" && (

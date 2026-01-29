@@ -1,0 +1,11 @@
+.game-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* border: 1px solid #ccc; */
+  /* border-radius: 16px; */
+  margin-top: 8px;
+}
