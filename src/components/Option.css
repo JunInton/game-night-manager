@@ -12,7 +12,8 @@
 
 .game-card:hover,
 .game-card-focused {
-  border-color: #2563eb;
+  /* border-color: #2563eb; */
+  border-color: black;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
 }
 
@@ -77,7 +78,8 @@
   justify-content: center;
   background: none;
   border: none;
-  color: #2563eb;
+  /* color: #2563eb; */
+  color: black;
   cursor: pointer;
   transition: all 0.2s;
   padding: 0;
@@ -85,7 +87,7 @@
 
 .add-button:hover {
   transform: scale(1.1);
-  color: #1d4ed8;
+  /* color: #1d4ed8; */
 }
 
 .add-button svg {

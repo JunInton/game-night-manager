@@ -48,12 +48,13 @@ const demoGames: Game[] = [
 ];
 
 export default function SetupScreen({ onNext }: Props) {
-
+  const [started, setStarted] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedGames, setSelectedGames] = useState<Game[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(true);
 
   const filteredGames = demoGames.filter((game) =>
-    game.name.toLowerCase().includes(search.toLowerCase()) &&
+    game.name.toLowerCase().startsWith(search.toLowerCase()) &&
     !selectedGames.some((selected) => selected.name === game.name)
   );
 
@@ -61,51 +62,164 @@ export default function SetupScreen({ onNext }: Props) {
     (game) => !selectedGames.some((selected) => selected.name === game.name)
   );
 
+  // Initial state - just showing "Create your game night list" button
+  if (!started) {
+    return (
+      <div className="setup-screen setup-screen-initial">
+        <div className="initial-header">
+          <h1 className="setup-title">Board Game Playlist</h1>
+          <button
+            className="create-button"
+            onClick={() => setStarted(true)}
+          >
+            Create your game night list
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Started state - showing search and games
   return (
     <div className="setup-screen">
       <div className="setup-header">
-        <button className="close-button">x</button>
         <h1 className="setup-title">Board Game Playlist</h1>
+        <button 
+          className="toggle-button"
+          onClick={() => setShowSearchResults(!showSearchResults)}
+          aria-label={showSearchResults ? "Hide search results" : "Show search results"}
+        >
+          {showSearchResults ? '×' : '+'}
+        </button>
       </div>
 
-      <div className="search-container">
-        <GameSearchInput value={search} onChange={setSearch} />
-      </div>
+      {showSearchResults ? (
+        <div className="search-container">
+          <GameSearchInput value={search} onChange={setSearch} />
+        </div>
+      ) : (
+        <div className="add-more-message">
+          Click the + to add more games
+        </div>
+      )}
 
-      <div className="games-section">
-        <h2 className="section-title">
-          {search ? "Search Results" : "Most popular games"}
-        </h2>
+      {showSearchResults ? (
+        <div className="games-section">
+          <h2 className="section-title">
+            {search ? "Search Results" : "Most popular games"}
+          </h2>
 
-        {displayGames.length > 0 ? (
-          <GameSearchResults
-            games={displayGames}
-            onSelect={(game) => {
-              setSelectedGames([...selectedGames, game]);
-              setSearch("");
-            }}
-          />
-        ) : (
-          <p className="no-results"> No games found</p>
-        )}
-      </div>
+          {displayGames.length > 0 ? (
+            <GameSearchResults
+              games={displayGames}
+              onSelect={(game) => {
+                setSelectedGames([...selectedGames, game]);
+                setSearch("");
+              }}
+            />
+          ) : (
+            <p className="no-results">No games found</p>
+          )}
+        </div>
+      ) : (
+        <div className="games-section">
+          <h2 className="section-title">Your playlist</h2>
+          {selectedGames.length > 0 ? (
+            <ul className="playlist">
+              {selectedGames.map((game) => (
+                <li key={game.name} className="playlist-item">
+                  <div className="playlist-game-info">
+                    <span className="playlist-game-name">{game.name}</span>
+                    <span className="playlist-game-weight">{game.weight}</span>
+                  </div>
+                  <button
+                    className="remove-button"
+                    onClick={() => {
+                      setSelectedGames(selectedGames.filter(g => g.name !== game.name));
+                    }}
+                    aria-label={`Remove ${game.name}`}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="no-results">No games selected yet. Click the + to add games.</p>
+          )}
+        </div>
+      )}
 
-      {selectedGames.length > 0 && (
+      {showSearchResults && selectedGames.length > 0 && (
         <div className="selected-count">
           {selectedGames.length} game{selectedGames.length !== 1 ? 's' : ''} selected
         </div>
       )}
 
-      <button
-        className="create-button"
-        onClick={() => onNext(selectedGames)}
-        disabled={selectedGames.length === 0}
-      >
-        Create your game night list
-      </button>
+      {!showSearchResults && (
+        <button
+          className="create-button"
+          onClick={() => onNext(selectedGames)}
+          disabled={selectedGames.length === 0}
+        >
+          Ready to game
+        </button>
+      )}
     </div>
-  )
+  );
 }
+
+
+
+  // return (
+  //   <div className="setup-screen">
+  //     <div className="setup-header">
+  //       <button className="close-button">x</button>
+  //       <h1 className="setup-title">Board Game Playlist</h1>
+  //     </div>
+
+  //     <div className="search-container">
+  //       <GameSearchInput value={search} onChange={setSearch} />
+  //     </div>
+
+  //     <div className="games-section">
+  //       <h2 className="section-title">
+  //         {search ? "Search Results" : "Most popular games"}
+  //       </h2>
+
+  //       {displayGames.length > 0 ? (
+  //         <GameSearchResults
+  //           games={displayGames}
+  //           onSelect={(game) => {
+  //             setSelectedGames([...selectedGames, game]);
+  //             setSearch("");
+  //           }}
+  //         />
+  //       ) : (
+  //         <p className="no-results"> No games found</p>
+  //       )}
+  //     </div>
+
+  //     {selectedGames.length > 0 && (
+  //       <div className="selected-count">
+  //         {selectedGames.length} game{selectedGames.length !== 1 ? 's' : ''} selected
+  //       </div>
+  //     )}
+
+  //     <button
+  //       className="create-button"
+  //       onClick={() => onNext(selectedGames)}
+  //       disabled={selectedGames.length === 0}
+  //     >
+  //       Create your game night list
+  //     </button>
+  //   </div>
+  // )
+
+
+
+
+
 
   // return (
   //   <>
