@@ -1,0 +1,96 @@
+.game-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.game-card:hover,
+.game-card-focused {
+  /* border-color: #2563eb; */
+  border-color: black;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+}
+
+.game-image-placeholder {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #000000 0%, #ffffff 100%);
+}
+
+.game-image-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+}
+
+.game-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-weight {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.weight-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  text-transform: capitalize;
+}
+
+.add-button {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  /* color: #2563eb; */
+  color: black;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.add-button:hover {
+  transform: scale(1.1);
+  /* color: #1d4ed8; */
+}
+
+.add-button svg {
+  width: 28px;
+  height: 28px;
+}
