@@ -8,6 +8,28 @@ type Props = {
   onChange: (value: string) => void;
 };
 
+async function searchBGG(query: string) {
+  try {
+    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+    
+    if (!response.ok) {
+      throw new Error('Search failed');
+    }
+    
+    const data = await response.json();
+    
+    // data.data will be XML from BGG
+    // Parse this XML to get game info
+    console.log('BGG response:', data);
+    
+    return data;
+    
+  } catch (error) {
+    console.error('Search error:', error);
+    throw error;
+  }
+}
+
 export function GameSearchInput({ value, onChange }: Props) {
   const state = useSearchFieldState({
     value,
