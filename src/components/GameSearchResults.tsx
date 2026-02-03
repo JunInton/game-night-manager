@@ -1,9 +1,9 @@
 import { useListBox } from "react-aria";
 import { useListState, Item } from "react-stately";
 import { useRef } from "react";
+import List from '@mui/material/List';
 import type { Game } from "../domain/types";
 import { Option } from "./Option";
-import "./GameSearchResults.css";
 
 type Props = {
   games: Game[];
@@ -26,9 +26,7 @@ export function GameSearchResults({ games, onSelect }: Props) {
     {
       "aria-label": "Search results",
       onAction: (key) => {
-        // console.log("Action on key:", key);
         const game = games.find((g) => g.name === key);
-        // console.log("Found game:", game);
         if (game) onSelect(game);
       }
     },
@@ -37,14 +35,14 @@ export function GameSearchResults({ games, onSelect }: Props) {
   );
 
   return (
-    <ul
+    <List
       {...listBoxProps}
       ref={ref}
-      className="game-list"
+      sx={{ mt: 1 }}
     >
       {[...state.collection].map((item) => (
         <Option key={item.key} item={item} state={state} games={games} />
       ))}
-    </ul>
+    </List>
   );
 }

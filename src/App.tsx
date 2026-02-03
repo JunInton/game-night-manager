@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import SetupScreen from "./screens/SetupScreen";
 import SuggestionScreen from "./screens/SuggestionScreen";
 import ConfirmScreen from "./screens/ConfirmScreen";
@@ -28,9 +30,11 @@ function App() {
   return (
     <div className="app-root">
       <div className="app-frame">
-        <div className="app-header">
-          <h1>Game Night Manager</h1>
-        </div>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+          <Typography variant="h3" component="h1">
+            Game Night Manager
+          </Typography>
+        </Box>
         <div>
           {screen === "setup" && (
             <SetupScreen 
