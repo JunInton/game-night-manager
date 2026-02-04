@@ -30,11 +30,6 @@ function App() {
   return (
     <div className="app-root">
       <div className="app-frame">
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
-          <Typography variant="h3" component="h1">
-            Game Night Manager
-          </Typography>
-        </Box>
         <div>
           {screen === "setup" && (
             <SetupScreen 

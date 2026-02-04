@@ -21,10 +21,14 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontFamily: '"Road Rage", sans-serif',
+      fontWeight: 400,
+    },
     h3: {
       fontFamily: '"Road Rage", sans-serif',
       fontWeight: 400,
-    }
+    },
   },
 })
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -11,9 +11,11 @@ import ListItemText from '@mui/material/ListItemText';
 import Chip from '@mui/material/Chip';
 import Badge from '@mui/material/Badge';
 import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import MenuIcon from '@mui/icons-material/Menu';
 import type { Game } from "../domain/types";
 import { GameSearchInput } from "../components/GameSearchInput";
 import { GameSearchResults } from "../components/GameSearchResults";
@@ -66,6 +68,19 @@ export default function SetupScreen({ onNext }: Props) {
   const [search, setSearch] = useState("");
   const [selectedGames, setSelectedGames] = useState<Game[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(true);
+  const [lastAddedGame, setLastAddedGame] = useState<Game | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  // Auto-close snackbar after 3 seconds, resets timer on new game
+  useEffect(() => {
+    if (lastAddedGame) {
+      setSnackbarOpen(true);
+      const timer = setTimeout(() => {
+        setSnackbarOpen(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastAddedGame]);
 
   const filteredGames = demoGames.filter((game) =>
     game.name.toLowerCase().startsWith(search.toLowerCase()) &&
@@ -76,28 +91,62 @@ export default function SetupScreen({ onNext }: Props) {
     (game) => !selectedGames.some((selected) => selected.name === game.name)
   );
 
-  // Initial state - just showing "Create your game night list" button
+  // Initial state - showing large title and create button
   if (!started) {
     return (
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '80vh',
-        p: 3,
-        gap: 4,
-      }}>
-        <Typography variant='h3' component='h1' align='center'>
-          Board Game Playlist
-        </Typography>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '100vh',
+          p: 3,
+          overflow: 'hidden',
+        }}
+      >
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography 
+            variant="h1" 
+            component="h1" 
+            align="center"
+            sx={{
+              fontSize: { xs: '60px', sm: '80px' },
+              background: 'linear-gradient(135deg, #6750A4 0%, #9575CD 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            GAME NIGHT
+            <br />
+            MANAGER
+          </Typography>
+        </Box>
+        
         <Button
-          variant='contained'
-          size='large'
+          variant="contained"
+          size="large"
+          startIcon={
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+            </svg>
+          }
           onClick={() => setStarted(true)}
-          sx={{ maxWidth: 320, width: '100%'}}
+          sx={{ 
+            width: '100%',
+            maxWidth: 400,
+            py: 2,
+            mb: 4,
+            bgcolor: 'rgba(103, 80, 164, 0.3)',
+            color: '#9575CD',
+            fontWeight: 600,
+            '&:hover': {
+              bgcolor: 'rgba(103, 80, 164, 0.4)',
+            }
+          }}
         >
-          Create your game night list
+          Create game list
         </Button>
       </Box>
     );
@@ -106,10 +155,31 @@ export default function SetupScreen({ onNext }: Props) {
   // Started state - showing search and games
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <AppBar position="static" color="default" elevation={0}>
+      <AppBar position="static" elevation={0} sx={{ bgcolor: 'transparent' }}>
         <Toolbar>
-          <Typography variant="h6" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
-            Board Game Playlist
+          <IconButton
+            edge="start"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography 
+            variant="h6" 
+            component="h1" 
+            sx={{ 
+              flexGrow: 1, 
+              fontFamily: '"Road Rage", sans-serif',
+              fontSize: '1.5rem', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.1em',
+              background: 'linear-gradient(135deg, #6750A4 0%, #9575CD 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Game Night Manager
           </Typography>
           <IconButton
             edge="end"
@@ -135,7 +205,7 @@ export default function SetupScreen({ onNext }: Props) {
         {showSearchResults ? (
           <>
             <Typography variant="h6" sx={{ my: 2 }}>
-              {search ? "Search Results" : "Most popular games"}
+              {search ? "Search Results" : "Browse popular games"}
             </Typography>
 
             {displayGames.length > 0 ? (
@@ -143,6 +213,7 @@ export default function SetupScreen({ onNext }: Props) {
                 games={displayGames}
                 onSelect={(game) => {
                   setSelectedGames([...selectedGames, game]);
+                  setLastAddedGame(game);
                   setSearch("");
                 }}
               />
@@ -197,32 +268,73 @@ export default function SetupScreen({ onNext }: Props) {
         )}
       </Box>
 
-      {showSearchResults && selectedGames.length > 0 && (
-        <Box
-          sx={{
-            position: 'fixed',
-            bottom: 16,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10,
-          }}
+      {showSearchResults && (
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          sx={{ bottom: { xs: 24, sm: 24 } }}
         >
-          <Chip
-            label={`${selectedGames.length} game${selectedGames.length !== 1 ? 's' : ''} selected`}
-            color="primary"
-            sx={{ px: 2, py: 2.5 }}
-          />
-        </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              px: 3,
+              py: 1.5,
+              bgcolor: 'rgba(255, 255, 255, 0.95)',
+              color: '#000',
+              borderRadius: '4px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <Typography variant="body1" sx={{ color: '#000' }}>
+              {lastAddedGame?.name} is added to game list.
+            </Typography>
+            <IconButton 
+              size="small" 
+              onClick={() => setSnackbarOpen(false)}
+              sx={{ color: '#666' }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </Snackbar>
       )}
 
       {!showSearchResults && (
-        <Box sx={{ p: 2, position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'background.default' }}>
+        <Box sx={{ 
+          p: 2, 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          bgcolor: 'background.default',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
           <Button
             variant="contained"
-            fullWidth
             size="large"
             onClick={() => onNext(selectedGames)}
             disabled={selectedGames.length === 0}
+            sx={{
+              width: '100%',
+              maxWidth: 400,
+              py: 2,
+              bgcolor: 'rgba(103, 80, 164, 0.3)',
+              color: '#9575CD',
+              fontWeight: 600,
+              '&:hover': {
+                bgcolor: 'rgba(103, 80, 164, 0.4)',
+              },
+              '&:disabled': {
+                bgcolor: 'rgba(103, 80, 164, 0.1)',
+                color: 'rgba(149, 117, 205, 0.4)',
+              }
+            }}
           >
             Ready to game
           </Button>
@@ -231,90 +343,3 @@ export default function SetupScreen({ onNext }: Props) {
     </Box>
   );
 }
-
-
-
-  // return (
-  //   <div className="setup-screen">
-  //     <div className="setup-header">
-  //       <button className="close-button">x</button>
-  //       <h1 className="setup-title">Board Game Playlist</h1>
-  //     </div>
-
-  //     <div className="search-container">
-  //       <GameSearchInput value={search} onChange={setSearch} />
-  //     </div>
-
-  //     <div className="games-section">
-  //       <h2 className="section-title">
-  //         {search ? "Search Results" : "Most popular games"}
-  //       </h2>
-
-  //       {displayGames.length > 0 ? (
-  //         <GameSearchResults
-  //           games={displayGames}
-  //           onSelect={(game) => {
-  //             setSelectedGames([...selectedGames, game]);
-  //             setSearch("");
-  //           }}
-  //         />
-  //       ) : (
-  //         <p className="no-results"> No games found</p>
-  //       )}
-  //     </div>
-
-  //     {selectedGames.length > 0 && (
-  //       <div className="selected-count">
-  //         {selectedGames.length} game{selectedGames.length !== 1 ? 's' : ''} selected
-  //       </div>
-  //     )}
-
-  //     <button
-  //       className="create-button"
-  //       onClick={() => onNext(selectedGames)}
-  //       disabled={selectedGames.length === 0}
-  //     >
-  //       Create your game night list
-  //     </button>
-  //   </div>
-  // )
-
-
-
-
-
-
-  // return (
-  //   <>
-  //     <h2>Setup</h2>
-  //     <p>Enter games and session constraints.</p>
-
-  //     <GameSearchInput value={search} onChange={setSearch} />
-
-  //     {search && filteredGames.length > 0 && (
-  //       <GameSearchResults
-  //         games={filteredGames}
-  //         onSelect={(game) => {
-  //           setSelectedGames([...selectedGames, game]);
-  //           setSearch("");
-  //         }}
-  //       />
-  //     )}
-
-  //     {selectedGames.length > 0 && (
-  //       <>
-  //         <h3>Selected games</h3>
-  //         <ul>
-  //           {selectedGames.map((game) => (
-  //             <li key={game.name}>
-  //               {game.name} ({game.weight})
-  //             </li>
-  //           ))}
-  //         </ul>
-
-  //         <button onClick={() => onNext(selectedGames)}>Use selected games</button>
-  //       </>
-  //     )}
-
-  //   </>
-  // )

@@ -4,6 +4,7 @@ html, body {
   height: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
 }
 
 body {
@@ -15,7 +16,7 @@ body {
   width: 100%;
   max-width: 480px;
   min-height: 100vh;
-  padding: 16px;
+  /* padding: 16px; */
   /* border: 1px solid #ddd; */
   /* border-radius: 16px; */
   box-sizing: border-box;

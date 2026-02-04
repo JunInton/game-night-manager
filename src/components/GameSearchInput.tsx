@@ -35,16 +35,21 @@ export function GameSearchInput({ value, onChange }: Props) {
   return (
     <TextField
       fullWidth
-      label="Search games"
+      placeholder="What games are you playing?"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="What games are you playing?"
       InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
+        endAdornment: (
+          <InputAdornment position="end">
             <SearchIcon />
           </InputAdornment>
         ),
+      }}
+      sx={{
+        '& .MuiOutlinedInput-root': {
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '28px',
+        }
       }}
     />
   );

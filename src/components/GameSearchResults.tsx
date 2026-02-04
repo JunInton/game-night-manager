@@ -1,7 +1,7 @@
 import { useListBox } from "react-aria";
 import { useListState, Item } from "react-stately";
 import { useRef } from "react";
-import List from '@mui/material/List';
+import Box from '@mui/material/Box';
 import type { Game } from "../domain/types";
 import { Option } from "./Option";
 
@@ -35,14 +35,19 @@ export function GameSearchResults({ games, onSelect }: Props) {
   );
 
   return (
-    <List
+    <Box
       {...listBoxProps}
       ref={ref}
-      sx={{ mt: 1 }}
+      component="ul"
+      sx={{ 
+        listStyle: 'none',
+        p: 0,
+        m: 0,
+      }}
     >
       {[...state.collection].map((item) => (
         <Option key={item.key} item={item} state={state} games={games} />
       ))}
-    </List>
+    </Box>
   );
 }
