@@ -5,6 +5,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Stack from '@mui/material/Stack';
 import type { Game } from "../domain/types";
+import { Header } from "../components/Header";
 
 type Props = {
   game: Game;
@@ -14,7 +15,10 @@ type Props = {
 
 export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
   return (
-    <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <Header />
+      
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3, maxWidth: 600, mx: 'auto', width: '100%' }}>
       <Typography variant="h4" gutterBottom align="center">
         Now Playing
       </Typography>
@@ -55,6 +59,7 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
           Restart
         </Button>
       </Stack>
+      </Box>
     </Box>
   );
 }

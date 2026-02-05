@@ -7,6 +7,7 @@ import Stack from '@mui/material/Stack';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import type { Game } from "../domain/types";
+import { Header } from "../components/Header";
 
 type Props = {
   game: Game;
@@ -18,7 +19,10 @@ type Props = {
 
 export default function SuggestionScreen({ game, nextWeight, onConfirm, onVeto, onWeightPreferenceChange }: Props) {
   return (
-    <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <Header />
+      
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3, maxWidth: 600, mx: 'auto', width: '100%' }}>
       <Typography variant="h4" gutterBottom align="center">
         Next Game
       </Typography>
@@ -88,6 +92,7 @@ export default function SuggestionScreen({ game, nextWeight, onConfirm, onVeto, 
           Nope
         </Button>
       </Stack>
+      </Box>
     </Box>
   );
 }

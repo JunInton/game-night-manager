@@ -6,6 +6,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Chip from '@mui/material/Chip';
 import type { Game } from "../domain/types";
+import { Header } from "../components/Header";
 
 type Props = {
   vetoedGames: Game[];
@@ -18,7 +19,10 @@ export default function NoResultsScreen({ vetoedGames, onRestart, onReplayVetoed
   const sortedVetoedGames = [...vetoedGames].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <Header />
+      
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3, maxWidth: 600, mx: 'auto', width: '100%' }}>
       <Typography variant="h4" gutterBottom align="center">
         No more games left
       </Typography>
@@ -76,6 +80,7 @@ export default function NoResultsScreen({ vetoedGames, onRestart, onReplayVetoed
       >
         Start over
       </Button>
+      </Box>
     </Box>
   );
 }
