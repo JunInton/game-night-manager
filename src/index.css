@@ -20,7 +20,7 @@ body {
   /* border: 1px solid #ddd; */
   /* border-radius: 16px; */
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
 }
 

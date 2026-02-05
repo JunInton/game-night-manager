@@ -111,7 +111,7 @@ export default function SetupScreen({ onNext }: Props) {
             component="h1" 
             align="center"
             sx={{
-              fontSize: { xs: '60px', sm: '80px' },
+              fontSize: { xs: '80px', sm: '120px' },
               background: 'linear-gradient(135deg, #6750A4 0%, #9575CD 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -154,8 +154,8 @@ export default function SetupScreen({ onNext }: Props) {
 
   // Started state - showing search and games
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <AppBar position="static" elevation={0} sx={{ bgcolor: 'transparent' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <AppBar position="static" elevation={0} sx={{ bgcolor: 'transparent', flexShrink: 0 }}>
         <Toolbar>
           <IconButton
             edge="start"
@@ -170,7 +170,7 @@ export default function SetupScreen({ onNext }: Props) {
             sx={{ 
               flexGrow: 1, 
               fontFamily: '"Road Rage", sans-serif',
-              fontSize: '1.5rem', 
+              fontSize: '1.75rem', 
               textTransform: 'uppercase', 
               letterSpacing: '0.1em',
               background: 'linear-gradient(135deg, #6750A4 0%, #9575CD 100%)',
@@ -192,35 +192,58 @@ export default function SetupScreen({ onNext }: Props) {
       </AppBar>
 
       {showSearchResults ? (
-        <Box sx={{ p: 2 }}>
-          <GameSearchInput value={search} onChange={setSearch} />
-        </Box>
-      ) : (
-        <Alert severity="info" sx={{ m: 2 }}>
-          Click the + to add more games
-        </Alert>
-      )}
-
-      <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: 12 }}>
-        {showSearchResults ? (
-          <>
-            <Typography variant="h6" sx={{ my: 2 }}>
-              {search ? "Search Results" : "Browse popular games"}
-            </Typography>
-
-            {displayGames.length > 0 ? (
+        <Box sx={{ p: 2, flexShrink: 0 }}>
+          <GameSearchInput 
+            value={search} 
+            onChange={setSearch}
+            games={filteredGames}
+            onSelect={(game) => {
+              setSelectedGames([...selectedGames, game]);
+              setLastAddedGame(game);
+              setSearch("");
+            }}
+            renderResults={(games) => (
               <GameSearchResults
-                games={displayGames}
+                games={games}
                 onSelect={(game) => {
                   setSelectedGames([...selectedGames, game]);
                   setLastAddedGame(game);
                   setSearch("");
                 }}
               />
-            ) : (
-              <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 5 }}>
-                No games found
-              </Typography>
+            )}
+          />
+        </Box>
+      ) : (
+        <Alert severity="info" sx={{ display: 'flex', m: 2, flexShrink: 0, justifyContent: 'center',}}>
+          Click the + to add more games
+        </Alert>
+      )}
+
+      <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: !showSearchResults ? 10 : 2 }}>
+        {showSearchResults ? (
+          <>
+            {!search && (
+              <>
+                <Typography variant="h6" sx={{ my: 2 }}>
+                  Browse popular games
+                </Typography>
+
+                {displayGames.length > 0 ? (
+                  <GameSearchResults
+                    games={displayGames}
+                    onSelect={(game) => {
+                      setSelectedGames([...selectedGames, game]);
+                      setLastAddedGame(game);
+                      setSearch("");
+                    }}
+                  />
+                ) : (
+                  <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 5 }}>
+                    No games found
+                  </Typography>
+                )}
+              </>
             )}
           </>
         ) : (
@@ -261,7 +284,7 @@ export default function SetupScreen({ onNext }: Props) {
               </List>
             ) : (
               <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 5 }}>
-                No games selected yet. Click the + to add games.
+                No games selected yet.
               </Typography>
             )}
           </>
@@ -285,7 +308,7 @@ export default function SetupScreen({ onNext }: Props) {
               py: 1.5,
               bgcolor: 'rgba(255, 255, 255, 0.95)',
               color: '#000',
-              borderRadius: '4px',
+              borderRadius: 2,
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             }}
           >

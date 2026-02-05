@@ -38,20 +38,34 @@ export function Option ({ item, state, games }: OptionProps) {
     >
       <ButtonBase
         {...optionProps}
+        disableRipple={false}
+        onBlur={() => {
+          // Force blur after interaction to prevent persistent focus
+          if (ref.current) {
+            ref.current.blur();
+          }
+        }}
         sx={{
           width: '100%',
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
           p: 1.5,
-          backgroundColor: isFocused ? 'rgba(103, 80, 164, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+          backgroundColor: 'transparent',
           border: '1px solid',
-          borderColor: isFocused ? 'primary.main' : 'rgba(255, 255, 255, 0.12)',
+          borderColor: 'transparent',
           borderRadius: 2,
           transition: 'all 0.2s',
           '&:hover': {
             backgroundColor: 'rgba(103, 80, 164, 0.15)',
             borderColor: 'primary.main',
+          },
+          '&:focus': {
+            backgroundColor: 'rgba(103, 80, 164, 0.2)',
+            borderColor: 'primary.main',
+          },
+          '&:active': {
+            backgroundColor: 'rgba(103, 80, 164, 0.25)',
           }
         }}
       >
