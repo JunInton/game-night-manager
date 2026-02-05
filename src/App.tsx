@@ -1,6 +1,4 @@
-import { useState } from "react";
-// import Box from '@mui/material/Box';
-// import Typography from '@mui/material/Typography';
+import { useState, useEffect } from "react";
 import SetupScreen from "./screens/SetupScreen";
 import SuggestionScreen from "./screens/SuggestionScreen";
 import ConfirmScreen from "./screens/ConfirmScreen";
@@ -14,18 +12,25 @@ type Screen = "setup" | "suggestion" | "confirm";
 type SessionState = {
   games: Game[];
   lastPlayed?: Game;
+  vetoedGames: Game[];
 }
 
 function App() {
   const [screen, setScreen] = useState<Screen>("setup");
   const [session, setSession] = useState<SessionState>({
     games: [],
+    vetoedGames: [],
   });
+  const [currentGame, setCurrentGame] = useState<Game | null>(null);
+  const [weightPreference, setWeightPreference] = useState<"light" | "heavy" | null>(null);
 
-  const nextGame = suggestNextGame(
-    session.games,
-    session.lastPlayed
-  );
+  // Calculate next game whenever session changes and we're on the suggestion screen
+  useEffect(() => {
+    if (screen === "suggestion") {
+      const nextGame = suggestNextGame(session.games, session.lastPlayed, weightPreference);
+      setCurrentGame(nextGame);
+    }
+  }, [screen, session.games, session.lastPlayed, weightPreference]);
 
   return (
     <div className="app-root">
@@ -34,54 +39,66 @@ function App() {
           {screen === "setup" && (
             <SetupScreen 
             onNext={(games) => {
-              setSession({ games });
+              setSession({ games, vetoedGames: [] });
               setScreen("suggestion");
             }} />
           )}
 
-          {/* {screen === "suggestion" && nextGame && (
-            <SuggestionScreen 
-              game={nextGame}
-              onNext={() => setScreen("confirm")} />
-          )} */}
-
           {screen === "suggestion" && (
-            nextGame ? (
+            currentGame ? (
               <SuggestionScreen 
-              game={nextGame}
-              onNext={() => setScreen("confirm")}
+              game={currentGame}
+              nextWeight={weightPreference}
+              onConfirm={() => {
+                setSession({
+                  games: session.games.filter((g) => g.name !== currentGame.name),
+                  lastPlayed: currentGame,
+                  vetoedGames: session.vetoedGames,
+                });
+                setScreen("confirm");
+              }}
+              onVeto={() => {
+                setSession({
+                  ...session,
+                  games: session.games.filter(
+                    (g) => g.name !== currentGame.name
+                  ),
+                  vetoedGames: [...session.vetoedGames, currentGame],
+                });
+                // Stay on suggestion screen, useEffect will trigger new suggestion
+              }}
+              onWeightPreferenceChange={(weight) => setWeightPreference(weight)}
               />
             ) : (
               <NoResultsScreen
+                vetoedGames={session.vetoedGames}
                 onRestart={() => {
-                  setSession({ games: [] });
+                  setSession({ games: [], vetoedGames: [] });
+                  setWeightPreference(null);
                   setScreen("setup");
+                }}
+                onReplayVetoed={() => {
+                  setSession({
+                    games: session.vetoedGames,
+                    vetoedGames: [],
+                    lastPlayed: undefined,
+                  });
+                  setWeightPreference(null);
+                  setScreen("suggestion");
                 }}
               />
             )
           )}
 
-          {screen === "confirm" && nextGame && (
+          {screen === "confirm" && currentGame && (
             <ConfirmScreen 
-            game={nextGame}
-            onConfirm={() => {
-              setSession({
-                games: session.games.filter((g) => g.name !== nextGame.name),
-                lastPlayed: nextGame,
-              });
-              setScreen("suggestion");
-            }}
-            onVeto={() => {
-              setSession({
-                ...session,
-                games: session.games.filter(
-                  (g) => g.name !== nextGame.name
-                ),
-              });
+            game={currentGame}
+            onNext={() => {
               setScreen("suggestion");
             }}
             onRestart={() => {
-              setSession({ games: [] });
+              setSession({ games: [], vetoedGames: [] });
+              setWeightPreference(null);
               setScreen("setup");
             }}
             />

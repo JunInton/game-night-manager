@@ -85,11 +85,13 @@ export default function SetupScreen({ onNext }: Props) {
   const filteredGames = demoGames.filter((game) =>
     game.name.toLowerCase().startsWith(search.toLowerCase()) &&
     !selectedGames.some((selected) => selected.name === game.name)
-  );
+  ).sort((a, b) => a.name.localeCompare(b.name));
 
   const displayGames = search ? filteredGames : demoGames.filter(
     (game) => !selectedGames.some((selected) => selected.name === game.name)
   );
+
+  const sortedSelectedGames = [...selectedGames].sort((a, b) => a.name.localeCompare(b.name));
 
   // Initial state - showing large title and create button
   if (!started) {
@@ -251,9 +253,9 @@ export default function SetupScreen({ onNext }: Props) {
             <Typography variant="h6" sx={{ my: 2 }}>
               Your playlist
             </Typography>
-            {selectedGames.length > 0 ? (
+            {sortedSelectedGames.length > 0 ? (
               <List>
-                {selectedGames.map((game) => (
+                {sortedSelectedGames.map((game) => (
                   <ListItem
                     key={game.name}
                     secondaryAction={
@@ -308,7 +310,8 @@ export default function SetupScreen({ onNext }: Props) {
               py: 1.5,
               bgcolor: 'rgba(255, 255, 255, 0.95)',
               color: '#000',
-              borderRadius: 2,
+              borderRadius: '4px',
+              width: '60vw',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             }}
           >
