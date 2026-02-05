@@ -18,7 +18,7 @@ type OptionProps = {
 export function Option ({ item, state, games }: OptionProps) {
   const ref = useRef<HTMLLIElement>(null);
 
-  const { optionProps, isFocused } = useOption(
+  const { optionProps } = useOption(
     { key: item.key },
     state,
     ref

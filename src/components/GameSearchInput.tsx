@@ -40,7 +40,7 @@ type Props = {
 //   }
 // }
 
-export function GameSearchInput({ value, onChange, games, onSelect, renderResults }: Props) {
+export function GameSearchInput({ value, onChange, games, renderResults }: Props) {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
 

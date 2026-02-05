@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+// import Box from '@mui/material/Box';
+// import Typography from '@mui/material/Typography';
 import SetupScreen from "./screens/SetupScreen";
 import SuggestionScreen from "./screens/SuggestionScreen";
 import ConfirmScreen from "./screens/ConfirmScreen";
