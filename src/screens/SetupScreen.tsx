@@ -1,8 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Chip from '@mui/material/Chip';
+// import Badge from '@mui/material/Badge';
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import MenuIcon from '@mui/icons-material/Menu';
 import type { Game } from "../domain/types";
 import { GameSearchInput } from "../components/GameSearchInput";
 import { GameSearchResults } from "../components/GameSearchResults";
-import "./SetupScreen.css";
 
 type Props = {
   onNext: (games: Game[]) => void;
@@ -52,6 +68,19 @@ export default function SetupScreen({ onNext }: Props) {
   const [search, setSearch] = useState("");
   const [selectedGames, setSelectedGames] = useState<Game[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(true);
+  const [lastAddedGame, setLastAddedGame] = useState<Game | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  // Auto-close snackbar after 3 seconds, resets timer on new game
+  useEffect(() => {
+    if (lastAddedGame) {
+      setSnackbarOpen(true);
+      const timer = setTimeout(() => {
+        setSnackbarOpen(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastAddedGame]);
 
   const filteredGames = demoGames.filter((game) =>
     game.name.toLowerCase().startsWith(search.toLowerCase()) &&
@@ -62,196 +91,278 @@ export default function SetupScreen({ onNext }: Props) {
     (game) => !selectedGames.some((selected) => selected.name === game.name)
   );
 
-  // Initial state - just showing "Create your game night list" button
+  // Initial state - showing large title and create button
   if (!started) {
     return (
-      <div className="setup-screen setup-screen-initial">
-        <div className="initial-header">
-          <h1 className="setup-title">Board Game Playlist</h1>
-          <button
-            className="create-button"
-            onClick={() => setStarted(true)}
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '100vh',
+          p: 3,
+          overflow: 'hidden',
+        }}
+      >
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography 
+            variant="h1" 
+            component="h1" 
+            align="center"
+            sx={{
+              fontSize: { xs: '80px', sm: '120px' },
+              background: 'linear-gradient(135deg, #6750A4 0%, #9575CD 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
           >
-            Create your game night list
-          </button>
-        </div>
-      </div>
+            GAME NIGHT
+            <br />
+            MANAGER
+          </Typography>
+        </Box>
+        
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+            </svg>
+          }
+          onClick={() => setStarted(true)}
+          sx={{ 
+            width: '100%',
+            maxWidth: 400,
+            py: 2,
+            mb: 4,
+            bgcolor: 'rgba(103, 80, 164, 0.3)',
+            color: '#9575CD',
+            fontWeight: 600,
+            '&:hover': {
+              bgcolor: 'rgba(103, 80, 164, 0.4)',
+            }
+          }}
+        >
+          Create game list
+        </Button>
+      </Box>
     );
   }
 
   // Started state - showing search and games
   return (
-    <div className="setup-screen">
-      <div className="setup-header">
-        <h1 className="setup-title">Board Game Playlist</h1>
-        <button 
-          className="toggle-button"
-          onClick={() => setShowSearchResults(!showSearchResults)}
-          aria-label={showSearchResults ? "Hide search results" : "Show search results"}
-        >
-          {showSearchResults ? '×' : '+'}
-        </button>
-      </div>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <AppBar position="static" elevation={0} sx={{ bgcolor: 'transparent', flexShrink: 0 }}>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography 
+            variant="h6" 
+            component="h1" 
+            sx={{ 
+              flexGrow: 1, 
+              fontFamily: '"Road Rage", sans-serif',
+              fontSize: '1.75rem', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.1em',
+              background: 'linear-gradient(135deg, #6750A4 0%, #9575CD 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Game Night Manager
+          </Typography>
+          <IconButton
+            edge="end"
+            onClick={() => setShowSearchResults(!showSearchResults)}
+            aria-label={showSearchResults ? "Hide search results" : "Show search results"}
+          >
+            {showSearchResults ? <CloseIcon /> : <AddIcon />}
+          </IconButton>
+        </Toolbar>
+      </AppBar>
 
       {showSearchResults ? (
-        <div className="search-container">
-          <GameSearchInput value={search} onChange={setSearch} />
-        </div>
+        <Box sx={{ p: 2, flexShrink: 0 }}>
+          <GameSearchInput 
+            value={search} 
+            onChange={setSearch}
+            games={filteredGames}
+            onSelect={(game) => {
+              setSelectedGames([...selectedGames, game]);
+              setLastAddedGame(game);
+              setSearch("");
+            }}
+            renderResults={(games) => (
+              <GameSearchResults
+                games={games}
+                onSelect={(game) => {
+                  setSelectedGames([...selectedGames, game]);
+                  setLastAddedGame(game);
+                  setSearch("");
+                }}
+              />
+            )}
+          />
+        </Box>
       ) : (
-        <div className="add-more-message">
+        <Alert severity="info" sx={{ display: 'flex', m: 2, flexShrink: 0, justifyContent: 'center',}}>
           Click the + to add more games
-        </div>
+        </Alert>
       )}
 
-      {showSearchResults ? (
-        <div className="games-section">
-          <h2 className="section-title">
-            {search ? "Search Results" : "Most popular games"}
-          </h2>
+      <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: !showSearchResults ? 10 : 2 }}>
+        {showSearchResults ? (
+          <>
+            {!search && (
+              <>
+                <Typography variant="h6" sx={{ my: 2 }}>
+                  Browse popular games
+                </Typography>
 
-          {displayGames.length > 0 ? (
-            <GameSearchResults
-              games={displayGames}
-              onSelect={(game) => {
-                setSelectedGames([...selectedGames, game]);
-                setSearch("");
-              }}
-            />
-          ) : (
-            <p className="no-results">No games found</p>
-          )}
-        </div>
-      ) : (
-        <div className="games-section">
-          <h2 className="section-title">Your playlist</h2>
-          {selectedGames.length > 0 ? (
-            <ul className="playlist">
-              {selectedGames.map((game) => (
-                <li key={game.name} className="playlist-item">
-                  <div className="playlist-game-info">
-                    <span className="playlist-game-name">{game.name}</span>
-                    <span className="playlist-game-weight">{game.weight}</span>
-                  </div>
-                  <button
-                    className="remove-button"
-                    onClick={() => {
-                      setSelectedGames(selectedGames.filter(g => g.name !== game.name));
+                {displayGames.length > 0 ? (
+                  <GameSearchResults
+                    games={displayGames}
+                    onSelect={(game) => {
+                      setSelectedGames([...selectedGames, game]);
+                      setLastAddedGame(game);
+                      setSearch("");
                     }}
-                    aria-label={`Remove ${game.name}`}
+                  />
+                ) : (
+                  <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 5 }}>
+                    No games found
+                  </Typography>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <Typography variant="h6" sx={{ my: 2 }}>
+              Your playlist
+            </Typography>
+            {selectedGames.length > 0 ? (
+              <List>
+                {selectedGames.map((game) => (
+                  <ListItem
+                    key={game.name}
+                    secondaryAction={
+                      <IconButton
+                        edge="end"
+                        aria-label={`Remove ${game.name}`}
+                        onClick={() => {
+                          setSelectedGames(selectedGames.filter(g => g.name !== game.name));
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    }
+                    sx={{
+                      bgcolor: 'background.paper',
+                      mb: 1,
+                      borderRadius: 1,
+                      border: 1,
+                      borderColor: 'divider'
+                    }}
                   >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="no-results">No games selected yet. Click the + to add games.</p>
-          )}
-        </div>
-      )}
+                    <ListItemText
+                      primary={game.name}
+                      secondary={<Chip label={game.weight} size="small" sx={{ mt: 0.5 }} />}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            ) : (
+              <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 5 }}>
+                No games selected yet.
+              </Typography>
+            )}
+          </>
+        )}
+      </Box>
 
-      {showSearchResults && selectedGames.length > 0 && (
-        <div className="selected-count">
-          {selectedGames.length} game{selectedGames.length !== 1 ? 's' : ''} selected
-        </div>
+      {showSearchResults && (
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          sx={{ bottom: { xs: 24, sm: 24 } }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              px: 3,
+              py: 1.5,
+              bgcolor: 'rgba(255, 255, 255, 0.95)',
+              color: '#000',
+              borderRadius: 2,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <Typography variant="body1" sx={{ color: '#000' }}>
+              {lastAddedGame?.name} is added to game list.
+            </Typography>
+            <IconButton 
+              size="small" 
+              onClick={() => setSnackbarOpen(false)}
+              sx={{ color: '#666' }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </Snackbar>
       )}
 
       {!showSearchResults && (
-        <button
-          className="create-button"
-          onClick={() => onNext(selectedGames)}
-          disabled={selectedGames.length === 0}
-        >
-          Ready to game
-        </button>
+        <Box sx={{ 
+          p: 2, 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          bgcolor: 'background.default',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => onNext(selectedGames)}
+            disabled={selectedGames.length === 0}
+            sx={{
+              width: '100%',
+              maxWidth: 400,
+              py: 2,
+              bgcolor: 'rgba(103, 80, 164, 0.3)',
+              color: '#9575CD',
+              fontWeight: 600,
+              '&:hover': {
+                bgcolor: 'rgba(103, 80, 164, 0.4)',
+              },
+              '&:disabled': {
+                bgcolor: 'rgba(103, 80, 164, 0.1)',
+                color: 'rgba(149, 117, 205, 0.4)',
+              }
+            }}
+          >
+            Ready to game
+          </Button>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }
-
-
-
-  // return (
-  //   <div className="setup-screen">
-  //     <div className="setup-header">
-  //       <button className="close-button">x</button>
-  //       <h1 className="setup-title">Board Game Playlist</h1>
-  //     </div>
-
-  //     <div className="search-container">
-  //       <GameSearchInput value={search} onChange={setSearch} />
-  //     </div>
-
-  //     <div className="games-section">
-  //       <h2 className="section-title">
-  //         {search ? "Search Results" : "Most popular games"}
-  //       </h2>
-
-  //       {displayGames.length > 0 ? (
-  //         <GameSearchResults
-  //           games={displayGames}
-  //           onSelect={(game) => {
-  //             setSelectedGames([...selectedGames, game]);
-  //             setSearch("");
-  //           }}
-  //         />
-  //       ) : (
-  //         <p className="no-results"> No games found</p>
-  //       )}
-  //     </div>
-
-  //     {selectedGames.length > 0 && (
-  //       <div className="selected-count">
-  //         {selectedGames.length} game{selectedGames.length !== 1 ? 's' : ''} selected
-  //       </div>
-  //     )}
-
-  //     <button
-  //       className="create-button"
-  //       onClick={() => onNext(selectedGames)}
-  //       disabled={selectedGames.length === 0}
-  //     >
-  //       Create your game night list
-  //     </button>
-  //   </div>
-  // )
-
-
-
-
-
-
-  // return (
-  //   <>
-  //     <h2>Setup</h2>
-  //     <p>Enter games and session constraints.</p>
-
-  //     <GameSearchInput value={search} onChange={setSearch} />
-
-  //     {search && filteredGames.length > 0 && (
-  //       <GameSearchResults
-  //         games={filteredGames}
-  //         onSelect={(game) => {
-  //           setSelectedGames([...selectedGames, game]);
-  //           setSearch("");
-  //         }}
-  //       />
-  //     )}
-
-  //     {selectedGames.length > 0 && (
-  //       <>
-  //         <h3>Selected games</h3>
-  //         <ul>
-  //           {selectedGames.map((game) => (
-  //             <li key={game.name}>
-  //               {game.name} ({game.weight})
-  //             </li>
-  //           ))}
-  //         </ul>
-
-  //         <button onClick={() => onNext(selectedGames)}>Use selected games</button>
-  //       </>
-  //     )}
-
-  //   </>
-  // )
