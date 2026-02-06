@@ -5,30 +5,30 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Stack from '@mui/material/Stack';
 import type { Game } from "../domain/types";
+import { Header } from "../components/Header";
 
 type Props = {
   game: Game;
-  onConfirm: () => void;
-  onVeto: () => void;
+  onNext: () => void;
   onRestart: () => void;
 };
 
-export default function ConfirmScreen({ game, onConfirm, onVeto, onRestart }: Props) {
+export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
   return (
-    <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
-      <Typography variant="h4" gutterBottom>
-        Confirm
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <Header />
+      
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3, maxWidth: 600, mx: 'auto', width: '100%' }}>
+      <Typography variant="h4" gutterBottom align="center">
+        Now Playing
       </Typography>
       
       <Card sx={{ my: 3 }}>
         <CardContent>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Do you want to play:
-          </Typography>
-          <Typography variant="h5" component="h3" gutterBottom>
+          <Typography variant="h5" component="h3" gutterBottom align="center">
             {game.name}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary" align="center">
             Weight: {game.weight}
           </Typography>
         </CardContent>
@@ -39,26 +39,27 @@ export default function ConfirmScreen({ game, onConfirm, onVeto, onRestart }: Pr
           variant="contained" 
           fullWidth 
           size="large"
-          onClick={onConfirm}
+          onClick={onNext}
+          sx={{
+            bgcolor: 'rgba(103, 80, 164, 0.3)',
+            color: '#9575CD',
+            fontWeight: 600,
+            '&:hover': {
+              bgcolor: 'rgba(103, 80, 164, 0.4)',
+            }
+          }}
         >
-          Play this
+          Next game
         </Button>
         <Button 
           variant="outlined" 
-          fullWidth 
-          size="large"
-          onClick={onVeto}
-        >
-          Nope
-        </Button>
-        <Button 
-          variant="text" 
           fullWidth
           onClick={onRestart}
         >
           Restart
         </Button>
       </Stack>
+      </Box>
     </Box>
   );
 }

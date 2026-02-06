@@ -3,22 +3,18 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Chip from '@mui/material/Chip';
-// import Badge from '@mui/material/Badge';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import CloseIcon from '@mui/icons-material/Close';
-import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import MenuIcon from '@mui/icons-material/Menu';
 import type { Game } from "../domain/types";
 import { GameSearchInput } from "../components/GameSearchInput";
 import { GameSearchResults } from "../components/GameSearchResults";
+import { Header } from "../components/Header";
 
 type Props = {
   onNext: (games: Game[]) => void;
@@ -82,14 +78,18 @@ export default function SetupScreen({ onNext }: Props) {
     }
   }, [lastAddedGame]);
 
-  const filteredGames = demoGames.filter((game) =>
-    game.name.toLowerCase().startsWith(search.toLowerCase()) &&
-    !selectedGames.some((selected) => selected.name === game.name)
-  );
+  const filteredGames = demoGames
+    .filter((game) =>
+      game.name.toLowerCase().startsWith(search.toLowerCase()) &&
+      !selectedGames.some((selected) => selected.name === game.name)
+    )
+    .sort((a, b) => a.name.localeCompare(b.name)); // Alphabetize search results
 
-  const displayGames = search ? filteredGames : demoGames.filter(
-    (game) => !selectedGames.some((selected) => selected.name === game.name)
-  );
+  const displayGames = search ? filteredGames : demoGames
+    .filter((game) => !selectedGames.some((selected) => selected.name === game.name))
+
+  // Alphabetize the selected games for display in playlist
+  const sortedSelectedGames = [...selectedGames].sort((a, b) => a.name.localeCompare(b.name));
 
   // Initial state - showing large title and create button
   if (!started) {
@@ -155,41 +155,11 @@ export default function SetupScreen({ onNext }: Props) {
   // Started state - showing search and games
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <AppBar position="static" elevation={0} sx={{ bgcolor: 'transparent', flexShrink: 0 }}>
-        <Toolbar>
-          <IconButton
-            edge="start"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography 
-            variant="h6" 
-            component="h1" 
-            sx={{ 
-              flexGrow: 1, 
-              fontFamily: '"Road Rage", sans-serif',
-              fontSize: '1.75rem', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.1em',
-              background: 'linear-gradient(135deg, #6750A4 0%, #9575CD 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            Game Night Manager
-          </Typography>
-          <IconButton
-            edge="end"
-            onClick={() => setShowSearchResults(!showSearchResults)}
-            aria-label={showSearchResults ? "Hide search results" : "Show search results"}
-          >
-            {showSearchResults ? <CloseIcon /> : <AddIcon />}
-          </IconButton>
-        </Toolbar>
-      </AppBar>
+      <Header 
+        showToggle={true}
+        toggleState={showSearchResults}
+        onToggle={() => setShowSearchResults(!showSearchResults)}
+      />
 
       {showSearchResults ? (
         <Box sx={{ p: 2, flexShrink: 0 }}>
@@ -251,9 +221,9 @@ export default function SetupScreen({ onNext }: Props) {
             <Typography variant="h6" sx={{ my: 2 }}>
               Your playlist
             </Typography>
-            {selectedGames.length > 0 ? (
+            {sortedSelectedGames.length > 0 ? (
               <List>
-                {selectedGames.map((game) => (
+                {sortedSelectedGames.map((game) => (
                   <ListItem
                     key={game.name}
                     secondaryAction={
@@ -308,7 +278,8 @@ export default function SetupScreen({ onNext }: Props) {
               py: 1.5,
               bgcolor: 'rgba(255, 255, 255, 0.95)',
               color: '#000',
-              borderRadius: 2,
+              borderRadius: '4px',
+              width: '65vw',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             }}
           >
