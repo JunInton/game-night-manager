@@ -71,15 +71,16 @@ export default function NoResultsScreen({ vetoedGames, onRestart, onReplayVetoed
           </Button>
         </>
       )}
-      
-      <Button 
-        variant="outlined" 
-        size="large"
-        fullWidth
-        onClick={onRestart}
-      >
-        Start over
-      </Button>
+        <Box sx={{ pt: 4 }}>
+          <Button 
+            variant="outlined" 
+            size="large"
+            fullWidth
+            onClick={onRestart}
+          >
+            Start over
+          </Button>
+        </Box>
       </Box>
     </Box>
   );
