@@ -13,24 +13,108 @@ type SessionState = {
   games: Game[];
   lastPlayed?: Game;
   vetoedGames: Game[];
+  overriddenGame?: Game;
 }
 
+// Key for sessionStorage
+const SESSION_KEY = "gameNightSession";
+
 function App() {
-  const [screen, setScreen] = useState<Screen>("setup");
-  const [session, setSession] = useState<SessionState>({
-    games: [],
-    vetoedGames: [],
+  // Load screen state from sessionStorage (defaults to "setup")
+  const [screen, setScreen] = useState<Screen>(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // If there are games in the session, go to suggestion screen
+        if (parsed.session?.games?.length > 0) {
+          return "suggestion";
+        }
+      } catch (e) {
+        console.error("Failed to parse saved session:", e);
+      }
+    }
+    return "setup";
   });
+
+  // Load session state from sessionStorage
+  const [session, setSession] = useState<SessionState>(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.session || {
+          games: [],
+          vetoedGames: [],
+        };
+      } catch (e) {
+        console.error("Failed to parse saved session:", e);
+        return {
+          games: [],
+          vetoedGames: [],
+        };
+      }
+    }
+    return {
+      games: [],
+      vetoedGames: [],
+    };
+  });
+
+  // Load weight preference from sessionStorage
+  const [weightPreference, setWeightPreference] = useState<"light" | "heavy" | null>(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.weightPreference || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
   const [currentGame, setCurrentGame] = useState<Game | null>(null);
-  const [weightPreference, setWeightPreference] = useState<"light" | "heavy" | null>(null);
+
+  // Save to sessionStorage whenever any state changes
+  useEffect(() => {
+    const dataToSave = {
+      session,
+      weightPreference,
+      screen,
+    };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(dataToSave));
+  }, [session, weightPreference, screen]);
 
   // Calculate next game whenever session changes and we're on the suggestion screen
   useEffect(() => {
     if (screen === "suggestion") {
-      const nextGame = suggestNextGame(session.games, session.lastPlayed, weightPreference);
-      setCurrentGame(nextGame);
+      // Use overridden game if it exists, otherwise suggest normally
+      if (session.overriddenGame) {
+        setCurrentGame(session.overriddenGame);
+      } else {
+        const nextGame = suggestNextGame(session.games, session.lastPlayed, weightPreference);
+        setCurrentGame(nextGame);
+      }
     }
-  }, [screen, session.games, session.lastPlayed, weightPreference]);
+  }, [screen, session.games, session.lastPlayed, session.overriddenGame, weightPreference]);
+
+  // Handle override selection
+  const handleOverride = (selectedGame: Game) => {
+    setSession({
+      ...session,
+      overriddenGame: selectedGame,
+    });
+  };
+
+  // Handle restart - clears sessionStorage
+  const handleRestart = () => {
+    setSession({ games: [], vetoedGames: [] });
+    setWeightPreference(null);
+    setScreen("setup");
+    sessionStorage.removeItem(SESSION_KEY);
+  };
 
   return (
     <div className="app-root">
@@ -48,12 +132,14 @@ function App() {
             currentGame ? (
               <SuggestionScreen 
               game={currentGame}
+              allGames={session.games}
               nextWeight={weightPreference}
               onConfirm={() => {
                 setSession({
                   games: session.games.filter((g) => g.name !== currentGame.name),
                   lastPlayed: currentGame,
                   vetoedGames: session.vetoedGames,
+                  overriddenGame: undefined,
                 });
                 setScreen("confirm");
               }}
@@ -64,19 +150,16 @@ function App() {
                     (g) => g.name !== currentGame.name
                   ),
                   vetoedGames: [...session.vetoedGames, currentGame],
+                  overriddenGame: undefined,
                 });
-                // Stay on suggestion screen, useEffect will trigger new suggestion
               }}
               onWeightPreferenceChange={(weight) => setWeightPreference(weight)}
+              onOverride={handleOverride}
               />
             ) : (
               <NoResultsScreen
                 vetoedGames={session.vetoedGames}
-                onRestart={() => {
-                  setSession({ games: [], vetoedGames: [] });
-                  setWeightPreference(null);
-                  setScreen("setup");
-                }}
+                onRestart={handleRestart}
                 onReplayVetoed={() => {
                   setSession({
                     games: session.vetoedGames,
@@ -96,11 +179,7 @@ function App() {
             onNext={() => {
               setScreen("suggestion");
             }}
-            onRestart={() => {
-              setSession({ games: [], vetoedGames: [] });
-              setWeightPreference(null);
-              setScreen("setup");
-            }}
+            onRestart={handleRestart}
             />
           )}
         </div>

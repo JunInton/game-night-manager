@@ -100,7 +100,7 @@ export default function SetupScreen({ onNext }: Props) {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'space-between',
-          height: '100vh',
+          minHeight: '100dvh',
           p: 3,
           overflow: 'hidden',
         }}
