@@ -47,7 +47,7 @@ export default function SuggestionScreen({
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
       <Header />
       
       <Box sx={{ flex: 1, overflow: 'auto', p: 3, maxWidth: 600, mx: 'auto', width: '100%' }}>
