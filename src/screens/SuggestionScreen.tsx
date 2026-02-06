@@ -43,9 +43,9 @@ export default function SuggestionScreen({ game, nextWeight, onConfirm, onVeto, 
           Next game preference:
         </Typography>
         <ToggleButtonGroup
-          value={nextWeight}
+          value={nextWeight ?? "auto"}
           exclusive
-          onChange={(_, value) => onWeightPreferenceChange(value)}
+          onChange={(_, value) => onWeightPreferenceChange(value === "auto" ? null : value)}
           fullWidth
           sx={{ mb: 2 }}
         >
@@ -55,7 +55,7 @@ export default function SuggestionScreen({ game, nextWeight, onConfirm, onVeto, 
           <ToggleButton value="heavy">
             Heavy
           </ToggleButton>
-          <ToggleButton value={null}>
+          <ToggleButton value={"auto"}>
             Auto
           </ToggleButton>
         </ToggleButtonGroup>
