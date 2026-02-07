@@ -15,49 +15,11 @@ import type { Game } from "../domain/types";
 import { GameSearchInput } from "../components/GameSearchInput";
 import { GameSearchResults } from "../components/GameSearchResults";
 import { Header } from "../components/Header";
+import { demoGames } from "../domain/demoGames";
 
 type Props = {
   onNext: (games: Game[]) => void;
 };
-
-const demoGames: Game[] = [
-  { name: "Roll For It", weight: "light" },
-  { name: "Gloomhaven", weight: "heavy" },
-  { name: "Spirit Island", weight: "heavy" },
-  { name: "Qwixx", weight: "light" },
-  { name: "Camel Up", weight: "heavy" },
-  { name: "Veiled Fate", weight: "heavy" },
-  { name: "Incan Gold", weight: "light" },
-  { name: "Flip 7", weight: "light" },
-  { name: "Azul", weight: "heavy" },
-  { name: "Codenames", weight: "light" },
-  { name: "Wingspan", weight: "heavy" },
-  { name: "Pandemic", weight: "heavy" },
-  { name: "Sushi Go!", weight: "light" },
-  { name: "Ticket to Ride", weight: "light" },
-  { name: "Carcassonne", weight: "light" },
-  { name: "7 Wonders", weight: "heavy" },
-  { name: "Dominion", weight: "heavy" },
-  { name: "Splendor", weight: "light" },
-  { name: "Betrayal at House on the Hill", weight: "heavy" },
-  { name: "Castle Panic", weight: "light" },
-  { name: "Dixit", weight: "light" },
-  { name: "Everdell", weight: "heavy" },
-  { name: "Flamecraft", weight: "light" },
-  { name: "Hanabi", weight: "light" },
-  { name: "Kingdomino", weight: "light" },
-  { name: "Mysterium", weight: "heavy" },
-  { name: "Photosynthesis", weight: "heavy" },
-  { name: "Namiji", weight: "light" },
-  { name: "Pandante", weight: "light" },
-  { name: "Quacks of Quedlinburg", weight: "heavy" },
-  { name: "Set a Watch", weight: "light" },
-  { name: "Space Base", weight: "light" },
-  { name: "Tiny Epic Galaxies", weight: "light" },
-  { name: "Roll for the Galaxy", weight: "heavy" },
-  { name: "Tsuro", weight: "light" },
-  { name: "Zombicide", weight: "heavy" },
-];
 
 export default function SetupScreen({ onNext }: Props) {
   const [started, setStarted] = useState(false);
