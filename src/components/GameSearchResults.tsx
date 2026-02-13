@@ -46,7 +46,7 @@ export function GameSearchResults({ games, onSelect }: Props) {
       }}
     >
       {[...state.collection].map((item) => (
-        <Option key={item.key} item={item} state={state} games={games} />
+        <Option key={item.key} item={item} state={state} games={games} onSelect={onSelect} />
       ))}
     </Box>
   );

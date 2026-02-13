@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -16,6 +15,7 @@ import { GameSearchInput } from "../components/GameSearchInput";
 import { GameSearchResults } from "../components/GameSearchResults";
 import { Header } from "../components/Header";
 import { demoGames } from "../domain/demoGames";
+import { PrimaryButton } from "../components/PrimaryButton";
 
 type Props = {
   onNext: (games: Game[]) => void;
@@ -86,8 +86,7 @@ export default function SetupScreen({ onNext }: Props) {
           </Typography>
         </Box>
         
-        <Button
-          variant="contained"
+        <PrimaryButton
           size="large"
           startIcon={
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -95,21 +94,15 @@ export default function SetupScreen({ onNext }: Props) {
             </svg>
           }
           onClick={() => setStarted(true)}
-          sx={{ 
+          sx={{
             width: '100%',
             maxWidth: 400,
             py: 2,
             mb: 4,
-            bgcolor: 'rgba(103, 80, 164, 0.3)',
-            color: '#9575CD',
-            fontWeight: 600,
-            '&:hover': {
-              bgcolor: 'rgba(103, 80, 164, 0.4)',
-            }
           }}
-        >
+          >
           Create game list
-        </Button>
+        </PrimaryButton>
       </Box>
     );
   }
@@ -152,7 +145,7 @@ export default function SetupScreen({ onNext }: Props) {
         </Alert>
       )}
 
-      <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: !showSearchResults ? 10 : 2 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: !showSearchResults ? 14 : 2 }}>
         {showSearchResults ? (
           <>
             {!search && (
@@ -271,8 +264,7 @@ export default function SetupScreen({ onNext }: Props) {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-          <Button
-            variant="contained"
+          <PrimaryButton
             size="large"
             onClick={() => onNext(selectedGames)}
             disabled={selectedGames.length === 0}
@@ -280,20 +272,10 @@ export default function SetupScreen({ onNext }: Props) {
               width: '100%',
               maxWidth: 400,
               py: 2,
-              bgcolor: 'rgba(103, 80, 164, 0.3)',
-              color: '#9575CD',
-              fontWeight: 600,
-              '&:hover': {
-                bgcolor: 'rgba(103, 80, 164, 0.4)',
-              },
-              '&:disabled': {
-                bgcolor: 'rgba(103, 80, 164, 0.1)',
-                color: 'rgba(149, 117, 205, 0.4)',
-              }
             }}
           >
             Ready to game
-          </Button>
+          </PrimaryButton>
         </Box>
       )}
     </Box>
