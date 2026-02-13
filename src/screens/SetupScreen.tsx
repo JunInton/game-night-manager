@@ -17,6 +17,20 @@ import { Header } from "../components/Header";
 import { demoGames } from "../domain/demoGames";
 import { PrimaryButton } from "../components/PrimaryButton";
 
+// Temporary function to test BGG API integration - will remove later
+import { searchBGG, getGameDetails } from "../services/bggApi";
+const handleTestAPI = async () => {
+  console.log('Testing search...');
+  const results = await searchBGG('wingspan');
+  console.log('Search results:', results);
+
+  if (results.length > 0) {
+    console.log('Testing game details...');
+    const details = await getGameDetails(results[0].id!);
+    console.log('Game details:', details);
+  }
+}
+
 type Props = {
   onNext: (games: Game[]) => void;
 };
@@ -85,6 +99,9 @@ export default function SetupScreen({ onNext }: Props) {
             MANAGER
           </Typography>
         </Box>
+
+        {/* Temporary button for testing BGG API integration - will remove later */}
+        <button onClick={handleTestAPI}>Test BGG API</button>
         
         <PrimaryButton
           size="large"
