@@ -98,7 +98,7 @@ function App() {
         setCurrentGame(nextGame);
       }
     }
-  }, [screen, session.games, session.lastPlayed, session.overriddenGame, weightPreference]);
+  }, [screen, session.games, session.lastPlayed, session.overriddenGame ]);
 
   // Handle override selection
   const handleOverride = (selectedGame: Game) => {

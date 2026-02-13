@@ -15,7 +15,10 @@ import Chip from '@mui/material/Chip';
 import Collapse from '@mui/material/Collapse';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import type { Game } from "../domain/types";
-import { Header } from "../components/Header";
+import { PrimaryButton } from '../components/PrimaryButton';
+import { SecondaryButton } from '../components/SecondaryButton';
+import { ScreenLayout } from '../components/ScreenLayout';
+import { gameCardSx, gameTitleProps, gameMetaProps } from "../components/sharedStyles"
 
 type Props = {
   game: Game;
@@ -47,20 +50,17 @@ export default function SuggestionScreen({
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
-      <Header />
-      
-      <Box sx={{ flex: 1, overflow: 'auto', p: 3, maxWidth: 600, mx: 'auto', width: '100%' }}>
+    <ScreenLayout>
       <Typography variant="h4" gutterBottom align="center">
         Next Game
       </Typography>
       
-      <Card sx={{ my: 3 }}>
+      <Card sx={gameCardSx}>
         <CardContent>
-          <Typography variant="h5" component="h3" gutterBottom align="center">
+          <Typography {...gameTitleProps}>
             {game.name}
           </Typography>
-          <Typography variant="body2" color="text.secondary" align="center">
+          <Typography {...gameMetaProps}>
             Weight: {game.weight}
           </Typography>
         </CardContent>
@@ -89,36 +89,26 @@ export default function SuggestionScreen({
         </ToggleButtonGroup>
         <Typography variant="caption" color="text.secondary" align="center" display="block">
           {nextWeight === null 
-            ? "Auto will alternate between light and heavy" 
-            : `Next suggestion will be a ${nextWeight} game`}
+            ? "After this game, auto will alternate between light and heavy" 
+            : `After this game, next suggestion will be a ${nextWeight} game`}
         </Typography>
       </Box>
       
       <Stack spacing={2}>
-        <Button 
-          variant="contained" 
+        <PrimaryButton 
           fullWidth 
           size="large"
           onClick={onConfirm}
-          sx={{
-            bgcolor: 'rgba(103, 80, 164, 0.3)',
-            color: '#9575CD',
-            fontWeight: 600,
-            '&:hover': {
-              bgcolor: 'rgba(103, 80, 164, 0.4)',
-            }
-          }}
         >
           Play this
-        </Button>
-        <Button 
-          variant="outlined" 
+        </PrimaryButton>
+        <SecondaryButton 
           fullWidth 
           size="large"
           onClick={onVeto}
         >
           Nope
-        </Button>
+        </SecondaryButton>
 
         {/* NEW: Override functionality */}
         {otherGames.length > 0 && (
@@ -173,7 +163,6 @@ export default function SuggestionScreen({
           </>
         )}
       </Stack>
-      </Box>
-    </Box>
+    </ScreenLayout>
   );
 }

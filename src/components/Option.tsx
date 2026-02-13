@@ -13,9 +13,10 @@ type OptionProps = {
   item: Node<Game>;
   state: ListState<Game>;
   games: Game[];
+  onSelect: (game: Game) => void;
 }
 
-export function Option ({ item, state, games }: OptionProps) {
+export function Option ({ item, state, games, onSelect }: OptionProps) {
   const ref = useRef<HTMLLIElement>(null);
 
   const { optionProps } = useOption(
@@ -119,6 +120,7 @@ export function Option ({ item, state, games }: OptionProps) {
           aria-label={`Add ${game.name}`}
           onClick={(e) => {
             e.stopPropagation(); // Prevent triggering the ButtonBase click
+            onSelect(game);
           }}
           sx={{
             color: 'text.primary',

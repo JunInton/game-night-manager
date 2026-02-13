@@ -22,6 +22,12 @@ body {
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
+  
+}
+@media (min-width: 768px) {
+  #root {
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+  }
 }
 
 * {

@@ -1,12 +1,13 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Chip from '@mui/material/Chip';
 import type { Game } from "../domain/types";
-import { Header } from "../components/Header";
+import { PrimaryButton } from '../components/PrimaryButton';
+import { SecondaryButton } from '../components/SecondaryButton';
+import { ScreenLayout } from '../components/ScreenLayout';
 
 type Props = {
   vetoedGames: Game[];
@@ -19,10 +20,7 @@ export default function NoResultsScreen({ vetoedGames, onRestart, onReplayVetoed
   const sortedVetoedGames = [...vetoedGames].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <Header />
-      
-      <Box sx={{ flex: 1, overflow: 'auto', p: 3, maxWidth: 600, mx: 'auto', width: '100%' }}>
+    <ScreenLayout>
       <Typography variant="h4" gutterBottom align="center">
         No more games left
       </Typography>
@@ -52,36 +50,25 @@ export default function NoResultsScreen({ vetoedGames, onRestart, onReplayVetoed
             ))}
           </List>
           
-          <Button 
-            variant="contained" 
+          <PrimaryButton 
             size="large"
             fullWidth
             onClick={onReplayVetoed}
-            sx={{ 
-              mb: 2,
-              bgcolor: 'rgba(103, 80, 164, 0.3)',
-              color: '#9575CD',
-              fontWeight: 600,
-              '&:hover': {
-                bgcolor: 'rgba(103, 80, 164, 0.4)',
-              }
-            }}
           >
             Play vetoed games
-          </Button>
+          </PrimaryButton>
         </>
       )}
-        <Box sx={{ pt: 4 }}>
-          <Button 
-            variant="outlined" 
-            size="large"
-            fullWidth
-            onClick={onRestart}
-          >
-            Start over
-          </Button>
-        </Box>
+
+      <Box sx={{ pt: 4 }}>
+        <SecondaryButton 
+          size="large"
+          fullWidth
+          onClick={onRestart}
+        >
+          Start over
+        </SecondaryButton>
       </Box>
-    </Box>
+    </ScreenLayout>
   );
 }

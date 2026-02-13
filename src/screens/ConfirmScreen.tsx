@@ -5,7 +5,10 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Stack from '@mui/material/Stack';
 import type { Game } from "../domain/types";
-import { Header } from "../components/Header";
+import { PrimaryButton } from '../components/PrimaryButton';
+import { ScreenLayout } from '../components/ScreenLayout';
+import { gameCardSx, gameTitleProps, gameMetaProps } from "../components/sharedStyles"
+
 
 type Props = {
   game: Game;
@@ -15,42 +18,30 @@ type Props = {
 
 export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <Header />
-      
-      <Box sx={{ flex: 1, overflow: 'auto', p: 3, maxWidth: 600, mx: 'auto', width: '100%' }}>
+    <ScreenLayout>      
         <Typography variant="h4" gutterBottom align="center">
           Now Playing
         </Typography>
         
-        <Card sx={{ my: 3 }}>
+        <Card sx={gameCardSx}>
           <CardContent>
-            <Typography variant="h5" component="h3" gutterBottom align="center">
+            <Typography {...gameTitleProps}>
               {game.name}
             </Typography>
-            <Typography variant="body2" color="text.secondary" align="center">
+            <Typography {...gameMetaProps}>
               Weight: {game.weight}
             </Typography>
           </CardContent>
         </Card>
         
         <Stack spacing={2}>
-          <Button 
-            variant="contained" 
+          <PrimaryButton 
             fullWidth 
             size="large"
             onClick={onNext}
-            sx={{
-              bgcolor: 'rgba(103, 80, 164, 0.3)',
-              color: '#9575CD',
-              fontWeight: 600,
-              '&:hover': {
-                bgcolor: 'rgba(103, 80, 164, 0.4)',
-              }
-            }}
           >
             Next game
-          </Button>
+          </PrimaryButton>
           
           {/* Add significant spacing before restart button */}
           <Box sx={{ pt: 12 }}>
@@ -71,7 +62,6 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
             </Button>
           </Box>
         </Stack>
-      </Box>
-    </Box>
+    </ScreenLayout>
   );
 }
