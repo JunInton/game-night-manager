@@ -21,7 +21,6 @@ export async function searchBGG(query: string) {
     const games = Array.from(items).map(item => ({
       id: item.getAttribute('id'),
       name: item.querySelector('name')?.getAttribute('value'),
-      yearPublished: item.querySelector('yearpublished')?.getAttribute('value'),
     }))
 
     return games;
@@ -30,7 +29,6 @@ export async function searchBGG(query: string) {
     console.error('Error fetching BGG data:', error);
     throw error;
   }
-
 }
 
 export async function getGameDetails(gameId: string) {
@@ -48,11 +46,21 @@ export async function getGameDetails(gameId: string) {
     const item = xmlDoc.querySelector('item');
     const averageWeight = item?.querySelector('averageweight')?.getAttribute('value');
 
+    // Get image URL
+    const imageUrl= item?.querySelector('image')?.textContent || '';
+    const thumbnailUrl = item?.querySelector('thumbnail')?.textContent || '';
+
+    // Mapping BGG weight to light/heavy
+    const weightNum = parseFloat(averageWeight || '2.5');
+    const weight: 'light' | 'heavy' = weightNum < 2.5 ? 'light' : 'heavy';
+
     return {
       id: gameId,
       name: item?.querySelector('name[type="primary"]')?.getAttribute('value') || '',
-      weight: averageWeight,
-      yearPublished: item?.querySelector('yearpublished')?.getAttribute('value'),
+      weight,
+      averageWeight: averageWeight,
+      imageUrl: imageUrl || thumbnailUrl, // Use thumbnail if main image is not available
+      thumbnailUrl
     }
 
   } catch (error) {
