@@ -17,7 +17,7 @@ import { GameSearchResults } from "../components/GameSearchResults";
 import { Header } from "../components/Header";
 // import { demoGames } from "../domain/demoGames";
 import { PrimaryButton } from "../components/PrimaryButton";
-import { searchBGG, getGameDetails } from "../services/bggApi";
+import { searchBGG, getGameDetails, getMultipleGameDetails } from "../services/bggApi";
 
 // Temporary function to test BGG API integration - will remove later
 // const handleTestAPI = async () => {
@@ -45,10 +45,10 @@ export default function SetupScreen({ onNext }: Props) {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   // BGG search state
-  const [bggResults, setBggResults] = useState<any[]>([]);
+  // const [bggResults, setBggResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
-  const [isFetchingThumbnails, setIsFetchingThumbnails] = useState(false);
+  // const [isFetchingThumbnails, setIsFetchingThumbnails] = useState(false);
   const [displayGames, setDisplayGames] = useState<Game[]>([]);
 
   // Auto-close snackbar after 3 seconds, resets timer on new game
@@ -62,80 +62,154 @@ export default function SetupScreen({ onNext }: Props) {
     }
   }, [lastAddedGame]);
 
-  // Debounced BGG search
+  // Combined search + thumbnail fetch
   useEffect(() => {
-    const searchBGGDebounced = async () => {
+    const searchAndFetchDetails = async () => {
       if (search.length >= 3) {
         setIsSearching(true);
+        
         try {
-          const results = await searchBGG(search);
-          setBggResults(results);
+          // Step 1: Search to get game IDs
+          const searchResults = await searchBGG(search);
+          
+          if (searchResults.length === 0) {
+            setDisplayGames([]);
+            setIsSearching(false);
+            return;
+          }
+          
+          // Step 2: Batch-fetch details for top 10 results
+          const topResults = searchResults.slice(0, 10);
+          const remainingResults = searchResults.slice(10);
+          const topIds = topResults.map(r => r.id).filter(Boolean) as string[];
+          
+          if (topIds.length > 0) {
+            const details = await getMultipleGameDetails(topIds);
+            
+            // Top 10 with images and accurate weights
+            const gamesWithThumbnails: Game[] = details.map(d => ({
+              name: d.name || 'Unknown Game',
+              weight: d.weight,
+              bggId: d.id || undefined,
+              imageUrl: d.thumbnailUrl || d.imageUrl || undefined,
+            }));
+            
+            // Remaining results (11+) without images
+            const gamesWithoutThumbnails: Game[] = remainingResults.map(r => ({
+              name: r.name || 'Unknown Game',
+              weight: 'light' as const,
+              bggId: r.id || undefined,
+            }));
+            
+            setDisplayGames([...gamesWithThumbnails, ...gamesWithoutThumbnails]);
+          } else {
+            // Fallback if no valid IDs
+            setDisplayGames(searchResults.map(r => ({
+              name: r.name || 'Unknown Game',
+              weight: 'light' as const,
+              bggId: r.id || undefined,
+            })));
+          }
+          
         } catch (error) {
-          console.error("Error searching BGG:", error);
-          setBggResults([]);
+          console.error('Search error:', error);
+          setDisplayGames([]);
         } finally {
           setIsSearching(false);
         }
       } else {
-        setBggResults([]);
         setDisplayGames([]);
       }
     };
 
-    const timeoutId = setTimeout(searchBGGDebounced, 500); // 500ms debounce
+    const timeoutId = setTimeout(searchAndFetchDetails, 500);
     return () => clearTimeout(timeoutId);
   }, [search]);
 
-  // Fetch thumbnails for search results
-  useEffect(() => {
-    const fetchThumbnails = async () => {
-      if (bggResults.length === 0 ) {
-        setDisplayGames([]);
-        return;
-      }
+  // Old code
+  // // Debounced BGG search
+  // useEffect(() => {
+  //   const searchBGGDebounced = async () => {
+  //     if (search.length >= 3) {
+  //       setIsSearching(true);
+  //       try {
+  //         const results = await searchBGG(search);
+  //         setBggResults(results);
+  //       } catch (error) {
+  //         console.error("Error searching BGG:", error);
+  //         setBggResults([]);
+  //       } finally {
+  //         setIsSearching(false);
+  //       }
+  //     } else {
+  //       setBggResults([]);
+  //       setDisplayGames([]);
+  //     }
+  //   };
 
-      setIsFetchingThumbnails(true);
+  //   const timeoutId = setTimeout(searchBGGDebounced, 500); // 500ms debounce
+  //   return () => clearTimeout(timeoutId);
+  // }, [search]);
 
-      // Take onl top 10 results to avoid too many requests
-      const resultsToFetch = bggResults.slice(0, 10);
+  // // Fetch thumbnails for search results
+  // useEffect(() => {
+  //   const fetchThumbnails = async () => {
+  //     if (bggResults.length === 0 ) {
+  //       setDisplayGames([]);
+  //       return;
+  //     }
 
-      try {
-        // Fetch details for all results in parallel
-        const detailsPromises = resultsToFetch.map(result =>
-          getGameDetails(result.id).catch(err => {
-            console.error(`Failed to fetch details for game ID ${result.id}:`, err);
-            return null;
-          })
-        );
+  //     setIsFetchingThumbnails(true);
 
-        const allDetails = await Promise.all(detailsPromises);
+  //     // Take onl top 10 results to avoid too many requests
+  //     const resultsToFetch = bggResults.slice(0, 5);
+  //     const remainingResults = bggResults.slice(5);
 
-        // Convert to Game format, filtering out any that failed
-        const gamesWithThumbnails: Game[] = allDetails
-          .filter((details): details is NonNullable<typeof details> => details !== null)
-          .map(details => ({
-            name: details.name,
-            weight: details.weight,
-            bggId: details.id,
-            imageUrl: details.thumbnailUrl || details.imageUrl,
-          }));
+  //     try {
+  //       // Batch fetch details
+  //       const gameIds = resultsToFetch.map(result => result.id).filter(Boolean) as string[];
 
-        setDisplayGames(gamesWithThumbnails);
-      } catch (error) {
-        console.error("Error fetching game details:", error);
-        // Fallback to games without thumbnails
-        setDisplayGames(resultsToFetch.map(result => ({
-          name: result.name || 'Unknown Game',
-          weight: 'light' as const, // Placeholder
-          bggId: result.id
-        })));
-      } finally {
-        setIsFetchingThumbnails(false);
-      }
-    };
+  //       if (gameIds.length === 0) {
+  //         setDisplayGames([]);
+  //         setIsFetchingThumbnails(false);
+  //         return;
+  //       }
 
-    fetchThumbnails();
-  }, [bggResults]);
+  //       const allDetails = await getMultipleGameDetails(gameIds);
+
+  //       // Convert to Game format, filtering out any that failed
+  //       const gamesWithThumbnails: Game[] = allDetails.map(details => ({
+  //         name: details.name,
+  //         weight: details.weight,
+  //         bggId: details.id,
+  //         imageUrl: details.thumbnailUrl || details.imageUrl,
+  //       }));
+
+  //       // Add remaining results without thumbnails as fallback
+  //       const gamesWithoutThumbnails: Game[] = remainingResults.map(result => ({
+  //         name: result.name || 'Unknown Game',
+  //         weight: 'light' as const, // Placeholder
+  //         bggId: result.id
+  //       }));
+
+  //       setDisplayGames([...gamesWithThumbnails, ...gamesWithoutThumbnails]);
+
+  //     } catch (error) {
+  //       console.error("Error fetching game details:", error);
+  //       // Fallback to games without thumbnails
+  //       setDisplayGames(resultsToFetch.map(result => ({
+  //         name: result.name || 'Unknown Game',
+  //         weight: 'light' as const, // Placeholder
+  //         bggId: result.id
+  //       })));
+
+  //     } finally {
+  //       setIsFetchingThumbnails(false);
+  //     }
+  //   };
+
+  //   fetchThumbnails();
+  // }, [bggResults]);
 
 
   // Handle game selection
@@ -146,7 +220,7 @@ export default function SetupScreen({ onNext }: Props) {
       setSelectedGames([...selectedGames, selectedGame]);
       setLastAddedGame(selectedGame);
       setSearch("");
-      setBggResults([]);
+      // setBggResults([]);
       setDisplayGames([]);
       return;
     }
@@ -166,7 +240,7 @@ export default function SetupScreen({ onNext }: Props) {
       setSelectedGames([...selectedGames, game]);
       setLastAddedGame(game);
       setSearch("");
-      setBggResults([]);
+      // setBggResults([]);
       setDisplayGames([]);
     } catch (error) {
       console.error("Error fetching game details:", error);
@@ -266,7 +340,7 @@ export default function SetupScreen({ onNext }: Props) {
             onSelect={handleBGGGameSelect}
             renderResults={(games) => (
               <>
-                {isSearching || isFetchingThumbnails ? (
+                {isSearching ? (
                   // Show skeleton loaders
                   <Box>
                     {[1, 2, 3].map((i) => (

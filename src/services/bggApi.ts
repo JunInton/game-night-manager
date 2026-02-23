@@ -70,6 +70,43 @@ export async function getGameDetails(gameId: string) {
 
 }
 
+export async function getMultipleGameDetails(gameIds: string[]) {
+  try {
+    const idsParam = gameIds.join(',');
+    const response = await fetch(`${API_BASE_URL}?endpoint=thing&id=${idsParam}`);
+
+    if (!response.ok) {
+      throw new Error('BGG multiple game details request failed');
+    }
+
+    const xmlText = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+
+    const items = xmlDoc.querySelectorAll('item');
+    return Array.from(items).map(item => {
+      const averageWeight = item.querySelector('averageweight')?.getAttribute('value');
+      const imageUrl= item.querySelector('image')?.textContent || '';
+      const thumbnailUrl = item.querySelector('thumbnail')?.textContent || '';
+      const weightNum = parseFloat(averageWeight || '2.5');
+      const weight: 'light' | 'heavy' = weightNum < 2.5 ? 'light' : 'heavy';
+
+      return {
+        id: item.getAttribute('id'),
+        name: item.querySelector('name')?.getAttribute('value'),
+        weight,
+        averageWeight,
+        imageUrl: imageUrl || thumbnailUrl,
+        thumbnailUrl
+      };
+    });
+
+  } catch (error) {
+    console.error('Error fetching BGG multiple game details:', error);
+    throw error;
+  }
+}
+
 // export async function testBGGApi() {
 //   console.log('Testing BGG API ...');
 

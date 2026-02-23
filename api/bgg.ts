@@ -24,8 +24,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let cacheKey = '';
 
     if (endpoint === 'search' && query) {
-      url = `${BGG_API_BASE_URL}/search?query=${encodeURIComponent(query as string)}&type=boardgame`;
-      cacheKey = `bgg:search:${query}`;
+      // Normalize query
+      const normalizedQuery = (query as string).toLowerCase().trim();
+      url = `${BGG_API_BASE_URL}/search?query=${encodeURIComponent(normalizedQuery)}&type=boardgame`;
+      cacheKey = `bgg:search:${normalizedQuery}`;
     } else if (endpoint === 'thing' && id) {
       url = `${BGG_API_BASE_URL}/thing?id=${id}&stats=1`;
       cacheKey = `bgg:thing:${id}`;
