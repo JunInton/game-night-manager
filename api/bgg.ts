@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 
 const BGG_API_BASE_URL = 'https://boardgamegeek.com/xmlapi2';
-const CACHE_DURATION = 60 * 60 * 24; // 24 hours in seconds
+const CACHE_DURATION = 60 * 60 * 24 * 5; // 5 days in seconds
 
 // Initialize Upstash Redis client
 const redis = Redis.fromEnv();
