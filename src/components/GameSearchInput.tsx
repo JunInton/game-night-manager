@@ -1,10 +1,6 @@
-import { useState, useRef } from 'react';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
-import Paper from '@mui/material/Paper';
-import ClickAwayListener from '@mui/material/ClickAwayListener';
-import Popper from '@mui/material/Popper';
 import Box from '@mui/material/Box';
 import type { Game } from '../domain/types';
 
@@ -40,27 +36,14 @@ type Props = {
 //   }
 // }
 
-export function GameSearchInput({ value, onChange, games, renderResults }: Props) {
-  const [open, setOpen] = useState(false);
-  const anchorRef = useRef<HTMLDivElement>(null);
-
-  const handleFocus = () => {
-    setOpen(true);
-  };
-
-  const handleClickAway = () => {
-    setOpen(false);
-  };
-
+export function GameSearchInput({ value, onChange }: Props) {
   return (
-    <ClickAwayListener onClickAway={handleClickAway}>
-      <Box ref={anchorRef} sx={{ position: 'relative' }}>
+    <Box sx={{ position: 'relative' }}>
         <TextField
           fullWidth
           placeholder="Search games"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onFocus={handleFocus}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -124,6 +107,5 @@ export function GameSearchInput({ value, onChange, games, renderResults }: Props
           </Box>
         </Popper> */}
       </Box>
-    </ClickAwayListener>
   );
 }
