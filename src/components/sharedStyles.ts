@@ -1,18 +1,5 @@
 /**
- * Shared style constants for game cards
- * 
- * These are reusable styling objects that can be spread into MUI components
- * to maintain consistency across the app without creating rigid components.
- * 
- * Benefits:
- * - Consistency: Same styling everywhere
- * - Flexibility: Can still customize individual instances
- * - Simplicity: No component abstraction overhead
- * - Visibility: Styling is still visible where it's used
- */
-
-/**
- * Standard styling for Card components displaying game information
+ * Shared style constants for game cards components displaying game information
  * 
  * Used in:
  * - SuggestionScreen (showing current game suggestion)

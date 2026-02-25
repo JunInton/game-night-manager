@@ -57,7 +57,7 @@ export function GameSearchInput({ value, onChange, games, renderResults }: Props
       <Box ref={anchorRef} sx={{ position: 'relative' }}>
         <TextField
           fullWidth
-          placeholder="What games are you playing?"
+          placeholder="Search games"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={handleFocus}
@@ -72,8 +72,8 @@ export function GameSearchInput({ value, onChange, games, renderResults }: Props
             '& .MuiOutlinedInput-root': {
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '28px',
-              borderBottomLeftRadius: open && value.length > 0 ? 0 : undefined,
-              borderBottomRightRadius: open && value.length > 0 ? 0 : undefined,
+              // borderBottomLeftRadius: open && value.length > 0 ? 0 : undefined,
+              // borderBottomRightRadius: open && value.length > 0 ? 0 : undefined,
               '& fieldset': {
                 border: 'none',
               },
@@ -81,7 +81,7 @@ export function GameSearchInput({ value, onChange, games, renderResults }: Props
           }}
         />
         
-        <Popper
+        {/* <Popper
           open={open && value.length > 0}
           anchorEl={anchorRef.current}
           placement="bottom-start"
@@ -116,13 +116,13 @@ export function GameSearchInput({ value, onChange, games, renderResults }: Props
                 renderResults(games)
               ) : (
                 <Box sx={{ py: 3, textAlign: 'center', color: 'text.secondary' }}>
-                  No games found
+                  No games found test
                 </Box>
               )}
             </Box>
           </Paper>
           </Box>
-        </Popper>
+        </Popper> */}
       </Box>
     </ClickAwayListener>
   );

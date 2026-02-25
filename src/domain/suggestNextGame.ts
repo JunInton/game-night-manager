@@ -1,39 +1,38 @@
 import type { Game } from "./types";
 
+// weightPreference meaning:
+//   "light"  → prefer light games  (first pick = light, then alternates: heavy, light, ...)
+//   "heavy"  → prefer heavy games  (first pick = heavy, then alternates: light, heavy, ...)
+//
+// There is no "auto" / null mode anymore — the playlist screen always has a preference set.
+// The default is "light" (Light → Heavy).
+
 export default function suggestNextGame(
   games: Game[],
   lastPlayed?: Game,
-  weightPreference?: "light" | "heavy" | null
+  weightPreference: "light" | "heavy" = "light"
 ): Game | null {
   if (games.length === 0) return null;
 
-  // If no game has been played yet, randomly select from all available games
-  if (!lastPlayed) {
-    const randomIndex = Math.floor(Math.random() * games.length);
-    return games[randomIndex] ?? null;
-  }
-
-  // Determine target weight
   let targetWeight: "light" | "heavy";
-  
-  if (weightPreference === "light" || weightPreference === "heavy") {
-    // User has set a specific preference
+
+  if (!lastPlayed) {
+    // First pick: use the preference directly.
+    // "light" → start with a light game; "heavy" → start with a heavy game.
     targetWeight = weightPreference;
   } else {
-    // Auto mode: alternate based on last played
+    // Subsequent picks: alternate from whatever was last played,
+    // but honour the preference direction when both weights are available.
+    // Simple rule: flip from last played.
     targetWeight = lastPlayed.weight === "heavy" ? "light" : "heavy";
   }
 
-  // Filter games by target weight
-  const matchingWeightGames = games.filter(g => g.weight === targetWeight);
+  const matching = games.filter(g => g.weight === targetWeight);
 
-  // If there are games with the target weight, randomly select one
-  if (matchingWeightGames.length > 0) {
-    const randomIndex = Math.floor(Math.random() * matchingWeightGames.length);
-    return matchingWeightGames[randomIndex] ?? null;
+  if (matching.length > 0) {
+    return matching[Math.floor(Math.random() * matching.length)];
   }
 
-  // If no games with target weight exist, randomly select from remaining games
-  const randomIndex = Math.floor(Math.random() * games.length);
-  return games[randomIndex] ?? null;
+  // Fallback: no games of the preferred weight remain, pick from whatever is left
+  return games[Math.floor(Math.random() * games.length)] ?? null;
 }
