@@ -1,43 +1,34 @@
-// const BGG_API_BASE_URL = 'https://boardgamegeek.com/xmlapi2';
-// const BEARER_TOKEN = import.meta.env.VITE_BGG_BEARER_TOKEN;
-
-// const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:5173/api/bgg' : '/api/bgg';
 const API_BASE_URL = '/api/bgg';
 
 export async function searchBGG(query: string) {
   try {
     const response = await fetch(`${API_BASE_URL}?endpoint=search&query=${encodeURIComponent(query)}`);
-
-    if (!response.ok) {
-      throw new Error('BGG search failed');
-    }
+    if (!response.ok) throw new Error('BGG search failed');
 
     const xmlText = await response.text();
-
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
 
-    const items = xmlDoc.querySelectorAll('item');
-    const games = Array.from(items).map(item => ({
+    return Array.from(xmlDoc.querySelectorAll('item')).map(item => ({
       id: item.getAttribute('id'),
       name: item.querySelector('name')?.getAttribute('value'),
-    }))
-
-    return games;
-
+    }));
   } catch (error) {
     console.error('Error fetching BGG data:', error);
     throw error;
   }
 }
 
+/** Ensure a BGG image URL is absolute (BGG sometimes returns protocol-relative //...) */
+function absoluteUrl(url: string): string {
+  if (!url) return '';
+  return url.startsWith('//') ? `https:${url}` : url;
+}
+
 export async function getGameDetails(gameId: string) {
   try {
     const response = await fetch(`${API_BASE_URL}?endpoint=thing&id=${gameId}`);
-
-    if (!response.ok) {
-      throw new Error('BGG game details request failed');
-    }
+    if (!response.ok) throw new Error('BGG game details request failed');
 
     const xmlText = await response.text();
     const parser = new DOMParser();
@@ -46,50 +37,53 @@ export async function getGameDetails(gameId: string) {
     const item = xmlDoc.querySelector('item');
     const averageWeight = item?.querySelector('averageweight')?.getAttribute('value');
 
-    // Get image URL
-    const imageUrl= item?.querySelector('image')?.textContent || '';
-    const thumbnailUrl = item?.querySelector('thumbnail')?.textContent || '';
+    // <image> is the full-resolution image; <thumbnail> is a small square crop.
+    // Always prefer the full-res image for the suggestion screen.
+    const imageUrl = absoluteUrl(item?.querySelector('image')?.textContent?.trim() || '');
+    const thumbnailUrl = absoluteUrl(item?.querySelector('thumbnail')?.textContent?.trim() || '');
 
-    // Mapping BGG weight to light/heavy
     const weightNum = parseFloat(averageWeight || '2.5');
     const weight: 'light' | 'heavy' = weightNum < 2.5 ? 'light' : 'heavy';
+
+    const playingTimeRaw = item?.querySelector('playingtime')?.getAttribute('value');
+    const playingTime = playingTimeRaw ? parseInt(playingTimeRaw, 10) : undefined;
 
     return {
       id: gameId,
       name: item?.querySelector('name[type="primary"]')?.getAttribute('value') || '',
       weight,
-      averageWeight: averageWeight,
-      imageUrl: imageUrl || thumbnailUrl, // Use thumbnail if main image is not available
-      thumbnailUrl
-    }
-
+      averageWeight,
+      // Full-res for the suggestion screen hero image
+      imageUrl: imageUrl || thumbnailUrl,
+      // Small crop for list thumbnails (faster to load)
+      thumbnailUrl,
+      playingTime: playingTime && playingTime > 0 ? playingTime : undefined,
+    };
   } catch (error) {
     console.error('Error fetching BGG game details:', error);
     throw error;
   }
-
 }
 
 export async function getMultipleGameDetails(gameIds: string[]) {
   try {
     const idsParam = gameIds.join(',');
     const response = await fetch(`${API_BASE_URL}?endpoint=thing&id=${idsParam}`);
-
-    if (!response.ok) {
-      throw new Error('BGG multiple game details request failed');
-    }
+    if (!response.ok) throw new Error('BGG multiple game details request failed');
 
     const xmlText = await response.text();
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
 
-    const items = xmlDoc.querySelectorAll('item');
-    return Array.from(items).map(item => {
+    return Array.from(xmlDoc.querySelectorAll('item')).map(item => {
       const averageWeight = item.querySelector('averageweight')?.getAttribute('value');
-      const imageUrl= item.querySelector('image')?.textContent || '';
-      const thumbnailUrl = item.querySelector('thumbnail')?.textContent || '';
+      const imageUrl = absoluteUrl(item.querySelector('image')?.textContent?.trim() || '');
+      const thumbnailUrl = absoluteUrl(item.querySelector('thumbnail')?.textContent?.trim() || '');
       const weightNum = parseFloat(averageWeight || '2.5');
       const weight: 'light' | 'heavy' = weightNum < 2.5 ? 'light' : 'heavy';
+
+      const playingTimeRaw = item.querySelector('playingtime')?.getAttribute('value');
+      const playingTime = playingTimeRaw ? parseInt(playingTimeRaw, 10) : undefined;
 
       return {
         id: item.getAttribute('id'),
@@ -97,27 +91,12 @@ export async function getMultipleGameDetails(gameIds: string[]) {
         weight,
         averageWeight,
         imageUrl: imageUrl || thumbnailUrl,
-        thumbnailUrl
+        thumbnailUrl,
+        playingTime: playingTime && playingTime > 0 ? playingTime : undefined,
       };
     });
-
   } catch (error) {
     console.error('Error fetching BGG multiple game details:', error);
     throw error;
   }
 }
-
-// export async function testBGGApi() {
-//   console.log('Testing BGG API ...');
-
-//   console.log('Searching for "Catan"...');
-//   const searchResults = await searchBGG('Catan');
-//   console.log('Search results:', searchResults);
-
-//   if (searchResults.length > 0) {
-//     const gameId = searchResults[0].id;
-//     console.log(`Fetching details for game ID ${gameId} ...`);
-//     const details = await getGameDetails(gameId!);
-//     console.log('Game details:', details);
-//   }
-// }
