@@ -8,7 +8,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import type { Game } from "../domain/types";
 import { GameSearchInput } from "../components/GameSearchInput";
 import { GameSearchResults } from "../components/GameSearchResults";
-import { searchBGG, getGameDetails, getMultipleGameDetails } from "../services/bggApi";
+import { searchBGG, getGameDetails, getMultipleGameDetails, getHotGames } from "../services/bggApi";
 
 type Props = {
   selectedGames: Game[];
@@ -30,8 +30,43 @@ export default function CreateListScreen({ selectedGames, onGamesChange, onViewP
   const [displayGames, setDisplayGames] = useState<Game[]>([]);
   const [lastAddedGame, setLastAddedGame] = useState<Game | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [hotGames, setHotGames] = useState<Game[]>([]);
+  const [hotGamesLoading, setHotGamesLoading] = useState(true);
 
   const searchIdRef = useRef(0);
+
+  // Load the BGG "hot" list once on mount so we have something to browse
+  // even before the user types anything.
+  useEffect(() => {
+    let cancelled = false;
+    const loadHotGames = async () => {
+      setHotGamesLoading(true);
+      try {
+        const hotList = await getHotGames();
+        if (cancelled) return;
+
+        // Batch-fetch full details (weight, thumbnail, play time) for the top 20.
+        const top20Ids = hotList.slice(0, 20).map(g => g.id);
+        const details = await getMultipleGameDetails(top20Ids);
+        if (cancelled) return;
+
+        setHotGames(details.map(d => ({
+          name: d.name || 'Unknown Game',
+          weight: d.weight,
+          bggId: d.id ?? undefined,
+          imageUrl: d.imageUrl || d.thumbnailUrl || undefined,
+          thumbnailUrl: d.thumbnailUrl || undefined,
+          playingTime: d.playingTime,
+        })));
+      } catch (e) {
+        console.error('Failed to load hot games:', e);
+      } finally {
+        if (!cancelled) setHotGamesLoading(false);
+      }
+    };
+    loadHotGames();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (!lastAddedGame) return;
@@ -234,11 +269,36 @@ export default function CreateListScreen({ selectedGames, onGamesChange, onViewP
           </Typography>
         )}
 
-        {/* Idle browse label */}
-        {!showResults && searchState === "idle" && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Browse popular games
-          </Typography>
+        {/* Idle state — show hot/popular games from BGG */}
+        {!showResults && (
+          <>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
+              Browse popular games
+            </Typography>
+
+            {hotGamesLoading ? (
+              // Skeletons while hot list loads
+              Array.from({ length: LOADER_COUNT }).map((_, i) => (
+                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1.5 }}>
+                  <Skeleton variant="rectangular" width={80} height={80} sx={{ borderRadius: 1, flexShrink: 0 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton variant="text" width="68%" height={24} />
+                    <Skeleton variant="text" width="32%" height={20} sx={{ mt: 0.5 }} />
+                  </Box>
+                  <Skeleton variant="circular" width={36} height={36} />
+                </Box>
+              ))
+            ) : hotGames.length > 0 ? (
+              <GameSearchResults
+                games={hotGames.filter(g => !selectedGames.some(s => s.name === g.name))}
+                onSelect={handleGameSelect}
+              />
+            ) : (
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 4 }}>
+                Could not load popular games
+              </Typography>
+            )}
+          </>
         )}
       </Box>
 

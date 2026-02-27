@@ -65,6 +65,27 @@ export async function getGameDetails(gameId: string) {
   }
 }
 
+/**
+ * Fetches the BGG "hot" list — the top ~50 trending boardgames right now.
+ * Returns only IDs and names; call getMultipleGameDetails to get
+ * weights, thumbnails, and playing time.
+ */
+export async function getHotGames(): Promise<{ id: string; name: string }[]> {
+  const response = await fetch(`${API_BASE_URL}?endpoint=hot`);
+  if (!response.ok) throw new Error('BGG hot list request failed');
+
+  const xmlText = await response.text();
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+
+  return Array.from(xmlDoc.querySelectorAll('item'))
+    .map(item => ({
+      id: item.getAttribute('id') ?? '',
+      name: item.querySelector('name')?.getAttribute('value') ?? 'Unknown Game',
+    }))
+    .filter(g => g.id);
+}
+
 export async function getMultipleGameDetails(gameIds: string[]) {
   try {
     const idsParam = gameIds.join(',');
