@@ -31,9 +31,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else if (endpoint === 'thing' && id) {
       url = `${BGG_API_BASE_URL}/thing?id=${id}&stats=1`;
       cacheKey = `bgg:thing:${id}`;
+    } else if (endpoint === 'hot') {
+      // BGG "hot" list — top ~50 trending boardgames right now.
+      // Cache for only 24 hours since it updates daily.
+      url = `${BGG_API_BASE_URL}/hot?type=boardgame`;
+      cacheKey = 'bgg:hot';
     } else {
       return res.status(400).json({ error: 'Invalid parameters' });
     }
+
+    // Use a shorter cache TTL for the hot list
+    const cacheTtl = endpoint === 'hot' ? 60 * 60 * 24 : CACHE_DURATION;
 
     // Try to get cached data first
     const cached = await redis.get<string>(cacheKey);
@@ -60,7 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const xmlText = await response.text();
 
     // Store in Redis cache
-    await redis.setex(cacheKey, CACHE_DURATION, xmlText);
+    await redis.setex(cacheKey, cacheTtl, xmlText);
     console.log('Stored in cache:', cacheKey);
 
     res.setHeader('Content-Type', 'text/xml');
