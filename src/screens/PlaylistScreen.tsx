@@ -28,33 +28,36 @@ type Props = {
 // ---------------------------------------------------------------------------
 // PlaylistCover — 2×2 collage, minimal rounding (borderRadius: 1 = 4px)
 // ---------------------------------------------------------------------------
+
+const COVER_TINTS = [
+  'rgba(103, 80, 164, 0.55)',
+  'rgba(103, 80, 164, 0.35)',
+  'rgba(103, 80, 164, 0.45)',
+  'rgba(103, 80, 164, 0.25)',
+];
+
+function Cell({ game, idx }: { game?: Game; idx: number }) {
+  return (game?.thumbnailUrl || game?.imageUrl) ? (
+    <Box
+      component="img"
+      src={game.thumbnailUrl || game.imageUrl}
+      alt={game.name}
+      sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+    />
+  ) : (
+    <Box sx={{
+      width: '100%', height: '100%',
+      bgcolor: game ? COVER_TINTS[idx % COVER_TINTS.length] : 'rgba(103,80,164,0.1)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)',
+    }}>
+      {game?.name.charAt(0) ?? ''}
+    </Box>
+  );
+}
+
 function PlaylistCover({ games }: { games: Game[] }) {
   const coverGames = games.slice(0, 4);
-  const tints = [
-    'rgba(103, 80, 164, 0.55)',
-    'rgba(103, 80, 164, 0.35)',
-    'rgba(103, 80, 164, 0.45)',
-    'rgba(103, 80, 164, 0.25)',
-  ];
-
-  const Cell = ({ game, idx }: { game?: Game; idx: number }) =>
-    (game?.thumbnailUrl || game?.imageUrl) ? (
-      <Box
-        component="img"
-        src={game.thumbnailUrl || game.imageUrl}
-        alt={game.name}
-        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-      />
-    ) : (
-      <Box sx={{
-        width: '100%', height: '100%',
-        bgcolor: game ? tints[idx % tints.length] : 'rgba(103,80,164,0.1)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)',
-      }}>
-        {game?.name.charAt(0) ?? ''}
-      </Box>
-    );
 
   return (
     <Box sx={{
