@@ -17,12 +17,13 @@ type SessionState = {
   lastPlayed?: Game;
   vetoedGames: Game[];
   overriddenGame?: Game;
+  isSorted: boolean;
 };
 
 const SESSION_KEY = "gameNightSession";
 
 function defaultSession(): SessionState {
-  return { games: [], playlistGames: [], vetoedGames: [] };
+  return { games: [], playlistGames: [], vetoedGames: [], isSorted: false };
 }
 
 function App() {
@@ -71,24 +72,39 @@ function App() {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({ session, weightPreference, screen }));
   }, [session, weightPreference, screen]);
 
-  useEffect(() => {
-    if (screen !== "suggestion") return;
-    setCurrentGame(
-      session.overriddenGame
-        ?? suggestNextGame(session.games, session.lastPlayed, weightPreference)
-    );
-  }, [screen, session.games, session.lastPlayed, session.overriddenGame, weightPreference]);
-
   const handleRestart = () => {
     setSession(defaultSession());
     setWeightPreference("light");
     setDraftGames([]);
+    setCurrentGame(null);
     setScreen("start");
     sessionStorage.removeItem(SESSION_KEY);
   };
 
   const handlePlaylistGamesChange = (updated: Game[]) => {
     setSession(prev => ({ ...prev, playlistGames: updated, games: updated }));
+  };
+
+  const handleSort = (newPreference: "light" | "heavy", sortedGames: Game[]) => {
+    setWeightPreference(newPreference);
+    setSession(prev => ({
+      ...prev,
+      playlistGames: sortedGames,
+      games: sortedGames,
+      isSorted: true,
+    }));
+  };
+
+  // Compute and set the next suggested game, called whenever we navigate to suggestion screen.
+  // Accepts the latest session/preference values directly so we don't rely on stale state.
+  const goToSuggestion = (
+    updatedSession: SessionState,
+    updatedPreference: "light" | "heavy"
+  ) => {
+    const next = updatedSession.overriddenGame
+      ?? suggestNextGame(updatedSession.games, updatedSession.lastPlayed, updatedPreference, updatedSession.isSorted);
+    setCurrentGame(next);
+    setScreen("suggestion");
   };
 
   return (
@@ -104,7 +120,7 @@ function App() {
             selectedGames={draftGames}
             onGamesChange={setDraftGames}
             onViewPlaylist={() => {
-              setSession({ games: draftGames, playlistGames: draftGames, vetoedGames: [] });
+              setSession(prev => ({ ...prev, games: draftGames, playlistGames: draftGames, vetoedGames: [] }));
               setScreen("playlist");
             }}
           />
@@ -114,21 +130,23 @@ function App() {
           <PlaylistScreen
             games={session.playlistGames}
             weightPreference={weightPreference}
+            isSorted={session.isSorted}
             onGamesChange={handlePlaylistGamesChange}
-            onWeightPreferenceChange={setWeightPreference}
+            onSort={handleSort}
             onAddGame={() => {
               setDraftGames(session.playlistGames);
               setScreen("create_list");
             }}
             onReady={() => {
-              setSession(prev => ({
-                ...prev,
-                games: prev.playlistGames,
-                vetoedGames: [],
+              const updatedSession = {
+                ...session,
+                games: session.playlistGames,
+                vetoedGames: [] as Game[],
                 lastPlayed: undefined,
                 overriddenGame: undefined,
-              }));
-              setScreen("suggestion");
+              };
+              setSession(updatedSession);
+              goToSuggestion(updatedSession, weightPreference);
             }}
           />
         )}
@@ -140,25 +158,30 @@ function App() {
               allGames={session.games}
               nextWeight={weightPreference}
               onConfirm={() => {
-                setSession(prev => ({
-                  ...prev,
-                  games: prev.games.filter(g => g.name !== currentGame.name),
+                const updatedSession = {
+                  ...session,
+                  games: session.games.filter(g => g.name !== currentGame.name),
                   lastPlayed: currentGame,
                   overriddenGame: undefined,
-                }));
+                };
+                setSession(updatedSession);
                 setScreen("confirm");
               }}
               onVeto={() => {
-                setSession(prev => ({
-                  ...prev,
-                  games: prev.games.filter(g => g.name !== currentGame.name),
-                  vetoedGames: [...prev.vetoedGames, currentGame],
+                const updatedSession = {
+                  ...session,
+                  games: session.games.filter(g => g.name !== currentGame.name),
+                  vetoedGames: [...session.vetoedGames, currentGame],
                   overriddenGame: undefined,
-                }));
+                };
+                setSession(updatedSession);
+                goToSuggestion(updatedSession, weightPreference);
               }}
               onWeightPreferenceChange={setWeightPreference}
               onOverride={(selected) => {
-                setSession(prev => ({ ...prev, overriddenGame: selected }));
+                const updatedSession = { ...session, overriddenGame: selected };
+                setSession(updatedSession);
+                goToSuggestion(updatedSession, weightPreference);
               }}
             />
           ) : (
@@ -166,14 +189,16 @@ function App() {
               vetoedGames={session.vetoedGames}
               onRestart={handleRestart}
               onReplayVetoed={() => {
-                setSession(prev => ({
-                  games: prev.vetoedGames,
-                  playlistGames: prev.vetoedGames,
-                  vetoedGames: [],
+                const updatedSession = {
+                  games: session.vetoedGames,
+                  playlistGames: session.vetoedGames,
+                  vetoedGames: [] as Game[],
                   lastPlayed: undefined,
-                }));
+                  isSorted: false,
+                };
+                setSession(updatedSession);
                 setWeightPreference("light");
-                setScreen("suggestion");
+                goToSuggestion(updatedSession, "light");
               }}
             />
           )
@@ -182,7 +207,7 @@ function App() {
         {screen === "confirm" && currentGame && (
           <ConfirmScreen
             game={currentGame}
-            onNext={() => setScreen("suggestion")}
+            onNext={() => goToSuggestion(session, weightPreference)}
             onRestart={handleRestart}
           />
         )}

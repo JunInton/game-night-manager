@@ -6,6 +6,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Snackbar from '@mui/material/Snackbar';
 import CloseIcon from '@mui/icons-material/Close';
 import type { Game } from "../domain/types";
+import { PrimaryButton } from "../components/PrimaryButton";
 import { GameSearchInput } from "../components/GameSearchInput";
 import { GameSearchResults } from "../components/GameSearchResults";
 import { searchBGG, getGameDetails, getMultipleGameDetails, getHotGames } from "../services/bggApi";
@@ -182,37 +183,30 @@ export default function CreateListScreen({ selectedGames, onGamesChange, onViewP
             - NOT purple — Figma shows this as white/on-surface text
       ── */}
       <Box sx={{
-        display: 'flex', alignItems: 'center',
-        px: 1, pt: 1.5, pb: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        p: 2,
         flexShrink: 0,
-        position: 'relative',
       }}>
-        <Box sx={{ width: 40 }} />
-
         <Typography
           component="h1"
           align="center"
-          sx={{
-            flex: 1,
-            fontFamily: 'inherit',   // Roboto — NOT Road Rage
-            fontSize: '1rem',        // body/large
-            fontWeight: 500,         // emphasized
-            letterSpacing: '0.009em',
-            color: 'text.primary',   // white (#E6E0E9) on dark background
-            WebkitTextFillColor: 'unset',
-            background: 'none',
-          }}
+          variant="titleLarge"
+          // sx={{
+          //   fontFamily: 'inherit',
+          //   fontSize: '1rem',
+          //   fontWeight: 500,
+          //   letterSpacing: '0.009em',
+          //   color: 'text.primary',
+          //   WebkitTextFillColor: 'unset',
+          //   background: 'none',
+          // }}
         >
           Create game list
         </Typography>
-
-        <IconButton onClick={onViewPlaylist} aria-label="View playlist" sx={{ color: 'text.primary' }}>
-          <CloseIcon />
-        </IconButton>
       </Box>
 
       {/* ── Search field — standalone, no dropdown ── */}
-      <Box sx={{ px: 2, pt: 1.5, pb: 1, flexShrink: 0 }}>
+      <Box sx={{ px: 2, pt: 1.5, pb: 2, flexShrink: 0 }}>
         <GameSearchInput
           value={search}
           onChange={setSearch}
@@ -223,7 +217,7 @@ export default function CreateListScreen({ selectedGames, onGamesChange, onViewP
       </Box>
 
       {/* ── Results area ── */}
-      <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: 4 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: 14 }}>
 
         {/* Skeletons */}
         {showResults && searchState === "searching" && (
@@ -302,11 +296,28 @@ export default function CreateListScreen({ selectedGames, onGamesChange, onViewP
         )}
       </Box>
 
+      {/* ── Fixed bottom CTA ── */}
+      <Box sx={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        p: 2, display: 'flex', justifyContent: 'center',
+        bgcolor: 'background.default',
+        maxWidth: 480, mx: 'auto',
+      }}>
+        <PrimaryButton
+          size="large"
+          onClick={onViewPlaylist}
+          sx={{ width: '100%', maxWidth: 400, py: 1.5 }}
+        >
+          Show Playlist ({selectedGames.length})
+        </PrimaryButton>
+      </Box>
+
       {/* ── Add snackbar ── */}
       <Snackbar
         open={snackbarOpen} autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ bottom: { xs: 84 } }}
       >
         <Box sx={{
           display: 'flex', alignItems: 'center', gap: 2,

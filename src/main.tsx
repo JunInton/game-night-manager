@@ -33,11 +33,24 @@ declare module '@mui/material/styles' {
     }
   }
 
+  interface TypographyVariants {
+    titleLarge: React.CSSProperties;
+  }
+  interface TypographyVariantsOptions {
+    titleLarge?: React.CSSProperties;
+  }
+
   // Extend ColorSchemeOverrides so extendTheme accepts 'dark' and 'light'
   // as named color schemes (required when using CSS vars mode)
   interface ColorSchemeOverrides {
     dark: true
     light: true
+  }
+}
+
+declare module '@mui/material/Typography' {
+  interface TypographyPropsVariantOverrides {
+    titleLarge: true;
   }
 }
 
@@ -201,6 +214,12 @@ const theme = extendTheme({
       fontSize: '0.75rem',
       letterSpacing: '0.03333em',
     },
+    titleLarge: {
+      fontSize: '1.375rem',
+      lineHeight: '1.75rem',
+      fontWeight: 500,
+      letterSpacing: '0.009em',
+  }
   },
 
   components: {

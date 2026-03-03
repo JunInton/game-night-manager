@@ -40,7 +40,7 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
       }}>
         {/* <CheckCircleIcon sx={{ fontSize: '1rem', color: '#6750A4' }} /> */}
         <Typography
-          variant="h5"
+          variant="titleLarge"
           // sx={{
           //   color: '#6750A4',
           //   fontWeight: 600,

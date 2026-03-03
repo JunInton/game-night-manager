@@ -10,20 +10,22 @@ import type { Game } from "./types";
 export default function suggestNextGame(
   games: Game[],
   lastPlayed?: Game,
-  weightPreference: "light" | "heavy" = "light"
+  weightPreference: "light" | "heavy" = "light",
+  isSorted: boolean = false
 ): Game | null {
   if (games.length === 0) return null;
+
+  // When the user has explicitly sorted the playlist, honour that order exactly.
+  // games[0] is always the next intended game.
+  if (isSorted) return games[0];
 
   let targetWeight: "light" | "heavy";
 
   if (!lastPlayed) {
     // First pick: use the preference directly.
-    // "light" → start with a light game; "heavy" → start with a heavy game.
     targetWeight = weightPreference;
   } else {
-    // Subsequent picks: alternate from whatever was last played,
-    // but honour the preference direction when both weights are available.
-    // Simple rule: flip from last played.
+    // Subsequent picks: flip from whatever was last played.
     targetWeight = lastPlayed.weight === "heavy" ? "light" : "heavy";
   }
 

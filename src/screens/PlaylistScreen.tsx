@@ -19,8 +19,9 @@ import type { Game } from "../domain/types";
 type Props = {
   games: Game[];
   weightPreference: "light" | "heavy";
+  isSorted: boolean;
   onGamesChange: (games: Game[]) => void;
-  onWeightPreferenceChange: (weight: "light" | "heavy") => void;
+  onSort: (newPreference: "light" | "heavy", sortedGames: Game[]) => void;
   onAddGame: () => void;
   onReady: () => void;
 };
@@ -94,10 +95,12 @@ function PlaylistCover({ games }: { games: Game[] }) {
 // PlaylistScreen
 // ---------------------------------------------------------------------------
 export default function PlaylistScreen({
-  games, weightPreference, onGamesChange, onWeightPreferenceChange, onAddGame, onReady,
+  games, weightPreference, isSorted, onGamesChange, onSort, onAddGame, onReady,
 }: Props) {
   const [lastRemovedGame, setLastRemovedGame] = useState<Game | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [sortSnackbarOpen, setSortSnackbarOpen] = useState(false);
+  const [sortLabel, setSortLabel] = useState("");
 
   const handleRemove = (game: Game) => {
     onGamesChange(games.filter(g => g.name !== game.name));
@@ -109,9 +112,37 @@ export default function PlaylistScreen({
   const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\s/, '');
 
-  // Toggle between only two states: "light" and "heavy" — no auto
+  // Shuffle an array in place using Fisher-Yates and return it
+  const shuffle = <T,>(arr: T[]): T[] => {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
+  // Interleave light and heavy games starting with the preferred weight.
+  // Each weight group is shuffled first so repeated sorts produce fresh orderings.
+  const sortGamesByWeight = (gamesToSort: Game[], firstWeight: "light" | "heavy"): Game[] => {
+    const secondWeight = firstWeight === 'light' ? 'heavy' : 'light';
+    const first = shuffle(gamesToSort.filter(g => g.weight === firstWeight));
+    const second = shuffle(gamesToSort.filter(g => g.weight === secondWeight));
+    const result: Game[] = [];
+    const maxLen = Math.max(first.length, second.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < first.length) result.push(first[i]);
+      if (i < second.length) result.push(second[i]);
+    }
+    return result;
+  };
+
   const handleWeightToggle = () => {
-    onWeightPreferenceChange(weightPreference === 'light' ? 'heavy' : 'light');
+    const newPreference = weightPreference === 'light' ? 'heavy' : 'light';
+    const sorted = sortGamesByWeight(games, newPreference);
+    onSort(newPreference, sorted);
+    const label = newPreference === 'light' ? 'Light > Heavy' : 'Heavy > Light';
+    setSortLabel(label);
+    setSortSnackbarOpen(true);
   };
 
   const weightLabel = weightPreference === 'light' ? 'Light > Heavy' : 'Heavy > Light';
@@ -121,7 +152,7 @@ export default function PlaylistScreen({
       <Header />
 
       {/* ── Playlist header ── */}
-      <Box sx={{ px: 2, pt: 0.5, pb: 1.5, flexShrink: 0 }}>
+      <Box sx={{ px: 2, pt: '16px', flexShrink: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <PlaylistCover games={games} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -145,7 +176,7 @@ export default function PlaylistScreen({
         </Box>
 
         {/* Action row */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, pt: '16px', pb: '24px' }}>
           <Button
             variant="outlined" size="small"
             startIcon={<AddIcon sx={{ fontSize: '1rem !important' }} />}
@@ -161,11 +192,11 @@ export default function PlaylistScreen({
 
           <Button
             variant="text" size="small"
-            startIcon={<SwapVertIcon sx={{ fontSize: '1.1rem !important', color: '#6750A4' }} />}
+            startIcon={<SwapVertIcon sx={{ fontSize: '1.1rem !important', color: isSorted ? '#CFBDFE' : '#6750A4' }} />}
             onClick={handleWeightToggle}
             sx={{
               borderRadius: 100, textTransform: 'none', fontSize: '0.875rem',
-              px: 1.5, color: '#6750A4',
+              px: 1.5, color: isSorted ? '#CFBDFE' : '#6750A4',
               '&:hover': { bgcolor: 'rgba(103,80,164,0.08)' },
             }}
           >
@@ -261,6 +292,26 @@ export default function PlaylistScreen({
             <strong>{lastRemovedGame?.name}</strong> removed from playlist
           </Typography>
           <IconButton size="small" onClick={() => setSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </Snackbar>
+      {/* ── Sort snackbar ── */}
+      <Snackbar
+        open={sortSnackbarOpen} autoHideDuration={3000}
+        onClose={() => setSortSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ bottom: { xs: 84 } }}
+      >
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 2,
+          px: 3, py: 1.5, bgcolor: '#E6E0E9',
+          borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', minWidth: '260px',
+        }}>
+          <Typography variant="body2" sx={{ color: '#322F35', flex: 1 }}>
+            Game order sorted to <strong>{sortLabel}</strong>
+          </Typography>
+          <IconButton size="small" onClick={() => setSortSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
