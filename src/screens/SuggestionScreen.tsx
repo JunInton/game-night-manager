@@ -7,13 +7,13 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Chip from '@mui/material/Chip';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
+import CloseIcon from '@mui/icons-material/Close';
 import type { Game } from "../domain/types";
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenLayout } from '../components/ScreenLayout';
@@ -58,11 +58,19 @@ export default function SuggestionScreen({
   game, allGames, onConfirm, onVeto, onOverride,
 }: Props) {
   const [overrideOpen, setOverrideOpen] = useState(false);
+  // "Pick a game" is a second view inside the same bottom sheet
+  const [pickGameOpen, setPickGameOpen] = useState(false);
   const otherGames = allGames.filter(g => g.name !== game.name);
 
   const handleOverrideSelect = (selected: Game) => {
     onOverride(selected);
     setOverrideOpen(false);
+    setPickGameOpen(false);
+  };
+
+  const handleSheetClose = () => {
+    setOverrideOpen(false);
+    setPickGameOpen(false);
   };
 
   const formatPlayTime = (minutes?: number) => {
@@ -202,60 +210,208 @@ export default function SuggestionScreen({
       {/* Extra padding so content doesn't hide behind the fixed button area */}
       <Box sx={{ height: 160 }} />
 
-      {/* ── Override dialog ── */}
-      <Dialog
+      {/* ── Override bottom sheet ──
+          A Drawer anchored to the bottom is the standard M3 "bottom sheet" pattern.
+          It slides up from the bottom edge instead of appearing as a centred dialog.
+          We show two views inside the same Drawer, toggled by pickGameOpen:
+            1. Default: two radio-style options ("Switch weight" / "Pick a game")
+            2. pickGameOpen: the full playlist list to choose from
+      ── */}
+      <Drawer
+        anchor="bottom"
         open={overrideOpen}
-        onClose={() => setOverrideOpen(false)}
-        fullWidth maxWidth="xs"
-        PaperProps={{ sx: { borderRadius: 3, bgcolor: '#211F24', backgroundImage: 'none' } }}
+        onClose={handleSheetClose}
+        PaperProps={{
+          sx: {
+            borderRadius: '28px 28px 0 0',
+            bgcolor: '#211F24',          // dark.surfaceContainer
+            backgroundImage: 'none',
+            maxWidth: 480,
+            mx: 'auto',
+            left: 0,
+            right: 0,
+          },
+        }}
       >
-        <DialogTitle sx={{ pb: 0.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <SwapVertIcon sx={{ color: '#6750A4', fontSize: '1.25rem' }} />
-            <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>
-              Choose a different game
-            </Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ pt: 1, pb: 1, maxHeight: '65vh', overflow: 'auto' }}>
-          <List disablePadding>
-            {otherGames.map((otherGame) => (
-              <ListItem key={otherGame.name} disablePadding sx={{ mb: 0.5 }}>
+        {/* Drag handle */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1.5, pb: 0.5 }}>
+          <Box sx={{ width: 32, height: 4, borderRadius: 2, bgcolor: '#49454E' }} />
+        </Box>
+
+        {!pickGameOpen ? (
+          /* ── View 1: two options ── */
+          <Box sx={{ px: 2, pb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
+              <Typography variant="titleLarge" sx={{ px: '24px' }}>
+                Change game
+              </Typography>
+              <IconButton size="small" onClick={handleSheetClose} sx={{ color: 'text.secondary' }}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            <List disablePadding>
+              {/* Option 1: Switch weight */}
+              <ListItem disablePadding sx={{ mb: 1 }}>
                 <ListItemButton
-                  onClick={() => handleOverrideSelect(otherGame)}
-                  sx={{ borderRadius: 2, px: 1, '&:hover': { bgcolor: 'rgba(103,80,164,0.15)' } }}
+                  onClick={() => {
+                    // Suggest the opposite weight by calling onOverride with a
+                    // game of the opposite weight from the remaining games
+                    const oppositeWeight = game.weight === 'heavy' ? 'light' : 'heavy';
+                    const match = otherGames.find(g => g.weight === oppositeWeight)
+                      ?? otherGames[0];
+                    if (match) handleOverrideSelect(match);
+                  }}
+                  sx={{
+                    borderRadius: 3,
+                    px: 2, py: 1.5,
+                    '&:hover': { bgcolor: 'rgba(103,80,164,0.12)' },
+                  }}
                 >
-                  {(otherGame.thumbnailUrl || otherGame.imageUrl) ? (
-                    <Box
-                      component="img"
-                      src={otherGame.thumbnailUrl || otherGame.imageUrl}
-                      alt={otherGame.name}
-                      sx={{ width: 44, height: 44, borderRadius: 0.5, objectFit: 'cover', mr: 1.5, flexShrink: 0 }}
-                    />
-                  ) : (
-                    <Box sx={{
-                      width: 44, height: 44, borderRadius: 0.5, mr: 1.5, flexShrink: 0,
-                      background: 'linear-gradient(135deg, rgba(103,80,164,0.3) 0%, rgba(103,80,164,0.55) 100%)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 16, fontWeight: 700, color: 'rgba(255,255,255,0.8)',
-                    }}>
-                      {otherGame.name.charAt(0)}
-                    </Box>
-                  )}
+                  {/* Radio-style indicator */}
+                  <Box sx={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: '2px solid #CFBDFE',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    mr: 2, flexShrink: 0,
+                  }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#CFBDFE' }} />
+                  </Box>
                   <ListItemText
-                    primary={otherGame.name}
-                    secondary={
-                      <Chip label={otherGame.weight} size="small"
-                        sx={{ mt: 0.5, height: 18, fontSize: '0.6875rem', textTransform: 'capitalize' }} />
-                    }
-                    primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+                    primary={`Switch to a ${game.weight === 'heavy' ? 'light' : 'heavy'} game`}
+                    secondary={game.weight === 'heavy'
+                      ? 'Play a shorter, more casual game'
+                      : 'Play longer, more complex games'}
+                    primaryTypographyProps={{ variant: 'body1', fontWeight: 500 }}
+                    secondaryTypographyProps={{ variant: 'body2' }}
                   />
+                  <ArrowRightIcon sx={{ color: 'text.secondary', ml: 1 }} />
                 </ListItemButton>
               </ListItem>
-            ))}
-          </List>
-        </DialogContent>
-      </Dialog>
+
+              {/* Option 2: Pick a specific game */}
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => setPickGameOpen(true)}
+                  sx={{
+                    borderRadius: 3,
+                    px: 2, py: 1.5,
+                    '&:hover': { bgcolor: 'rgba(103,80,164,0.12)' },
+                  }}
+                >
+                  <Box sx={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: '2px solid #CFBDFE',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    mr: 2, flexShrink: 0,
+                  }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#CFBDFE' }} />
+                  </Box>
+                  <ListItemText
+                    primary="Pick a game"
+                    secondary="Choose a specific game to play"
+                    primaryTypographyProps={{ variant: 'body1', fontWeight: 500 }}
+                    secondaryTypographyProps={{ variant: 'body2' }}
+                  />
+                  <ArrowRightIcon sx={{ color: 'text.secondary', ml: 1 }} />
+                </ListItemButton>
+              </ListItem>
+            </List>
+          </Box>
+        ) : (
+          /* ── View 2: full game picker ── */
+          <Box sx={{ pb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5, gap: 1 }}>
+              <IconButton
+                size="small"
+                onClick={() => setPickGameOpen(false)}
+                sx={{ color: 'text.secondary' }}
+                aria-label="Back"
+              >
+                {/* Reuse KeyboardArrowDown rotated 90° as a back chevron */}
+                <ArrowRightIcon sx={{ transform: 'rotate(180deg)' }} />
+              </IconButton>
+              <Typography variant="titleLarge" sx={{ flex: 1 }}>
+                Pick a game to skip to
+              </Typography>
+              <IconButton size="small" onClick={handleSheetClose} sx={{ color: 'text.secondary' }}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            <List disablePadding sx={{ maxHeight: '55vh', overflow: 'auto', px: 1 }}>
+              {otherGames.map((otherGame) => (
+                <ListItem key={otherGame.name} disablePadding sx={{ mb: 0.5 }}>
+                  <ListItemButton
+                    onClick={() => handleOverrideSelect(otherGame)}
+                    sx={{
+                      borderRadius: 2, px: 1.5,
+                      '&:hover': { bgcolor: 'rgba(103,80,164,0.12)' },
+                    }}
+                  >
+                    {/* Thumbnail */}
+                    {(otherGame.thumbnailUrl || otherGame.imageUrl) ? (
+                      <Box
+                        component="img"
+                        src={otherGame.thumbnailUrl || otherGame.imageUrl}
+                        alt={otherGame.name}
+                        sx={{ width: 56, height: 56, borderRadius: 1, objectFit: 'cover', mr: 1.5, flexShrink: 0 }}
+                      />
+                    ) : (
+                      <Box sx={{
+                        width: 56, height: 56, borderRadius: 1, mr: 1.5, flexShrink: 0,
+                        background: 'linear-gradient(135deg, rgba(103,80,164,0.3) 0%, rgba(103,80,164,0.55) 100%)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 20, fontWeight: 700, color: 'rgba(255,255,255,0.8)',
+                      }}>
+                        {otherGame.name.charAt(0)}
+                      </Box>
+                    )}
+                    {/* Name — grows, clamps at 2 lines */}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        flex: 1,
+                        fontWeight: 500,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        lineHeight: 1.4,
+                        minWidth: 0,
+                      }}
+                    >
+                      {otherGame.name}
+                    </Typography>
+
+                    {/* Weight badge */}
+                    <Box
+                      component="span"
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        px: 0.75,
+                        py: 0.25,
+                        borderRadius: 1,
+                        bgcolor: '#2B292F',
+                        color: '#E6E0E9',
+                        fontSize: '0.6875rem',
+                        fontWeight: 500,
+                        textTransform: 'capitalize',
+                        flexShrink: 0,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {otherGame.weight}
+                    </Box>
+                    <ArrowRightIcon sx={{ color: 'text.secondary', ml: 1, flexShrink: 0 }} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        )}
+      </Drawer>
     </ScreenLayout>
   );
 }

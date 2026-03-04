@@ -2,9 +2,8 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
-// import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 import type { Game } from "../domain/types";
-import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenLayout } from '../components/ScreenLayout';
 
 type Props = {
@@ -35,20 +34,11 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        pb: 1.5,
         gap: 0.75,
         mb: 1.5,
       }}>
-        {/* <CheckCircleIcon sx={{ fontSize: '1rem', color: '#6750A4' }} /> */}
-        <Typography
-          variant="titleLarge"
-          // sx={{
-          //   color: '#6750A4',
-          //   fontWeight: 600,
-          //   textTransform: 'uppercase',
-          //   letterSpacing: '0.08em',
-          //   fontSize: '0.75rem',
-          // }}
-        >
+        <Typography variant="titleLarge">
           Now Playing
         </Typography>
       </Box>
@@ -134,13 +124,38 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
         >
           Restart from beginning (testing only)
         </Button>
-        <PrimaryButton
+
+        {/*
+          "Finish gameplay" button
+          Uses M3 dark scheme surface/outline-variant tokens for a darker,
+          more muted look vs the tonal PrimaryButton:
+            bgcolor:  dark.surfaceContainerHigh  → #2B292F
+            color:    dark.primary               → #CFBDFE  (light purple)
+            border:   dark.outlineVariant        → #49454E
+        */}
+        <Button
+          variant="contained"
           size="large"
+          startIcon={<StopCircleOutlinedIcon />}
           onClick={onNext}
-          sx={{ width: '100%', py: 1.5 }}
+          sx={{
+            width: '100%',
+            py: 1.5,
+            borderRadius: 100,
+            textTransform: 'none',
+            fontWeight: 600,
+            boxShadow: 'none',
+            bgcolor: 'transparent',           // transparent
+            color: '#CFBDFE',             // dark.primary (light purple)
+            border: '1px solid #49454E',  // dark.outlineVariant
+            '&:hover': {
+              bgcolor: '#36343A',         // dark.surfaceContainerHighest
+              boxShadow: 'none',
+            },
+          }}
         >
-          Next game
-        </PrimaryButton>
+          Finish gameplay
+        </Button>
 
       </Box>
 

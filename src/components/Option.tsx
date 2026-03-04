@@ -91,30 +91,51 @@ export function Option ({ item, state, games, onSelect }: OptionProps) {
         </Box>
       )}
 
-      {/* Game info */}
-      <Box sx={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-        <Typography 
-          variant="body1" 
-          sx={{ 
-            fontWeight: 500,
-            color: 'text.primary',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {game.name}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {game.weight}
-        </Typography>
+      {/* Game name — grows to fill available space, clamps at 2 lines */}
+      <Typography
+        variant="body1"
+        sx={{
+          flex: 1,
+          fontWeight: 500,
+          color: 'text.primary',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          lineHeight: 1.4,
+          minWidth: 0,
+        }}
+      >
+        {game.name}
+      </Typography>
+
+      {/* Weight badge — never wraps, always right of name */}
+      <Box
+        component="span"
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          px: 0.75,
+          py: 0.25,
+          borderRadius: 1,
+          bgcolor: '#2B292F',
+          color: '#E6E0E9',
+          fontSize: '0.6875rem',
+          fontWeight: 500,
+          textTransform: 'capitalize',
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {game.weight}
       </Box>
 
-      {/* Add icon (not a button, just an icon) */}
-      <AddIcon 
+      {/* Add icon */}
+      <AddIcon
         sx={{
           color: 'text.primary',
           fontSize: 28,
+          flexShrink: 0,
         }}
       />
     </Box>

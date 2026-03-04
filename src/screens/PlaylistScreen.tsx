@@ -3,9 +3,6 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Chip from '@mui/material/Chip';
 import Snackbar from '@mui/material/Snackbar';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
@@ -214,31 +211,21 @@ export default function PlaylistScreen({
         ) : (
           <List disablePadding>
             {games.map((game) => (
-              <ListItem
+              <Box
                 key={game.bggId || game.name}
-                secondaryAction={
-                  <IconButton
-                    edge="end" size="small"
-                    aria-label={`Remove ${game.name}`}
-                    onClick={() => handleRemove(game)}
-                    sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
-                  >
-                    <CancelIcon fontSize="small" />
-                  </IconButton>
-                }
-                sx={{ px: 2, py: 1 }}
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1 }}
               >
-                {/* Thumbnail — borderRadius: 0.5 (2px) — very slight rounding */}
+                {/* Thumbnail */}
                 {(game.thumbnailUrl || game.imageUrl) ? (
                   <Box
                     component="img"
                     src={game.thumbnailUrl || game.imageUrl}
                     alt={game.name}
-                    sx={{ width: 48, height: 48, borderRadius: 0.5, objectFit: 'cover', mr: 1.5, flexShrink: 0 }}
+                    sx={{ width: 48, height: 48, borderRadius: 0.5, objectFit: 'cover', flexShrink: 0 }}
                   />
                 ) : (
                   <Box sx={{
-                    width: 48, height: 48, borderRadius: 0.5, mr: 1.5, flexShrink: 0,
+                    width: 48, height: 48, borderRadius: 0.5, flexShrink: 0,
                     background: 'linear-gradient(135deg, rgba(103,80,164,0.3) 0%, rgba(103,80,164,0.55) 100%)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 18, fontWeight: 700, color: 'rgba(255,255,255,0.8)',
@@ -246,17 +233,55 @@ export default function PlaylistScreen({
                     {game.name.charAt(0)}
                   </Box>
                 )}
-                <ListItemText
-                  primary={game.name}
-                  secondary={
-                    <Chip
-                      label={game.weight} size="small"
-                      sx={{ mt: 0.5, height: 18, fontSize: '0.6875rem', textTransform: 'capitalize' }}
-                    />
-                  }
-                  primaryTypographyProps={{ variant: 'body2', fontWeight: 500, sx: { mb: 0.25 } }}
-                />
-              </ListItem>
+
+                {/* Name — grows, clamps at 2 lines */}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    flex: 1,
+                    fontWeight: 500,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    lineHeight: 1.4,
+                    minWidth: 0,
+                  }}
+                >
+                  {game.name}
+                </Typography>
+
+                {/* Weight badge */}
+                <Box
+                  component="span"
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    px: 0.75,
+                    py: 0.25,
+                    borderRadius: 1,
+                    bgcolor: '#2B292F',
+                    color: '#E6E0E9',
+                    fontSize: '0.6875rem',
+                    fontWeight: 500,
+                    textTransform: 'capitalize',
+                    flexShrink: 0,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {game.weight}
+                </Box>
+
+                {/* Delete icon */}
+                <IconButton
+                  size="small"
+                  aria-label={`Remove ${game.name}`}
+                  onClick={() => handleRemove(game)}
+                  sx={{ color: 'text.disabled', flexShrink: 0, '&:hover': { color: 'error.main' } }}
+                >
+                  <CancelIcon fontSize="small" />
+                </IconButton>
+              </Box>
             ))}
           </List>
         )}
