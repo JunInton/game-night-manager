@@ -9,6 +9,8 @@ type ScreenLayoutProps = {
     showToggle?: boolean;
     toggleState?: boolean;
     onToggle?: () => void;
+    onViewPlaylist?: () => void;
+    onMainMenu?: () => void;
   };
 };
 export function ScreenLayout({

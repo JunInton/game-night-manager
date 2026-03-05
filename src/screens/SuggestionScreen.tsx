@@ -28,6 +28,8 @@ type Props = {
   onRemove: () => void;
   onWeightPreferenceChange: (weight: "light" | "heavy") => void;
   onOverride: (selectedGame: Game) => void;
+  onViewPlaylist: () => void;
+  onMainMenu: () => void;
 };
 
 function PlaceholderArt() {
@@ -57,7 +59,7 @@ function PlaceholderArt() {
 }
 
 export default function SuggestionScreen({
-  game, allGames, onConfirm, onSkip, onRemove, onOverride,
+  game, allGames, onConfirm, onSkip, onRemove, onOverride,onViewPlaylist, onMainMenu
 }: Props) {
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [pickGameOpen, setPickGameOpen] = useState(false);
@@ -104,7 +106,7 @@ export default function SuggestionScreen({
   return (
     // ScreenLayout provides the Header and a scrollable content area.
     // We use position:fixed for the button row so it's always at the bottom.
-    <ScreenLayout>
+    <ScreenLayout headerProps={{ onViewPlaylist, onMainMenu }}>
       {/* ── Big game image — square corners, bleeds to screen edges ── */}
       <Box sx={{
         width: { xs: 'calc(100% + 32px)', sm: 'calc(100% + 48px)' },

@@ -26,7 +26,7 @@ export default function StartScreen({ onStart }: Props) {
       }}
     >
       {/* Centred title */}
-      <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
         <Typography
           variant="h1"
           component="h1"
@@ -44,43 +44,56 @@ export default function StartScreen({ onStart }: Props) {
           <br />
           MANAGER
         </Typography>
+
+
       </Box>
 
+      {/* Buttons area - future Login etc. go here */}
       {/* CTA button
           In Figma the button uses:
             fill = M3/sys/light/primary-container  → #E9DDFF  (light lavender background)
             label = M3/sys/light/on-primary-container → #4D3D75 (darker purple text)
           This is the "filled tonal" button pattern in M3.
       */}
-      <Button
-        size="large"
-        startIcon={<AddIcon />}
-        onClick={onStart}
-        sx={{
-          width: '100%',
-          maxWidth: 400,
-          py: 2,
-          mb: 4,
-          borderRadius: 100,
-          textTransform: 'none',
-          fontWeight: 600,
-          fontSize: '1rem',
-          // Light lavender background matching Figma's primaryContainer
-          bgcolor: '#E9DDFF',
-          // Dark purple text matching Figma's onPrimaryContainer
-          color: '#4D3D75',
-          boxShadow: 'none',
-          '&:hover': {
-            bgcolor: '#DDD2F8',
-            boxShadow: 'none',
-          },
-          '& .MuiButton-startIcon': {
-            color: '#4D3D75',
-          },
-        }}
-      >
-        Create game list
-      </Button>
+
+        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <Button
+            size="large"
+            startIcon={<AddIcon />}
+            onClick={onStart}
+            sx={{
+              width: '100%',
+              maxWidth: 400,
+              py: 2,
+              borderRadius: 100,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '1rem',
+              // Light lavender background matching Figma's primaryContainer
+              bgcolor: '#E9DDFF',
+              // Dark purple text matching Figma's onPrimaryContainer
+              color: '#4D3D75',
+              boxShadow: 'none',
+              '&:hover': {
+                bgcolor: '#DDD2F8',
+                boxShadow: 'none',
+              },
+              '& .MuiButton-startIcon': {
+                color: '#4D3D75',
+              },
+            }}
+          >
+            Create game list
+          </Button>
+
+          {/* BGG logo */}
+          <Box
+            component="img"
+            src="/powered-by-bgg-reversed-rgb.svg"
+            alt="Powered by BoardGameGeek"
+            sx={{ height: 28, width: 'auto', opacity: 0.85 }}
+            />
+        </Box>
     </Box>
   );
 }

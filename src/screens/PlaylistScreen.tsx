@@ -21,6 +21,9 @@ type Props = {
   onSort: (newPreference: "light" | "heavy", sortedGames: Game[]) => void;
   onAddGame: () => void;
   onReady: () => void;
+  // True when the user navigates here mid-session via the hamburger menu
+  isResuming?: boolean;
+  onMainMenu?: () => void;
 };
 
 // ---------------------------------------------------------------------------
@@ -93,6 +96,7 @@ function PlaylistCover({ games }: { games: Game[] }) {
 // ---------------------------------------------------------------------------
 export default function PlaylistScreen({
   games, weightPreference, isSorted, onGamesChange, onSort, onAddGame, onReady,
+  isResuming = false, onMainMenu,
 }: Props) {
   const [lastRemovedGame, setLastRemovedGame] = useState<Game | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -146,7 +150,7 @@ export default function PlaylistScreen({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
-      <Header />
+      <Header onMainMenu={onMainMenu} />
 
       {/* ── Playlist header ── */}
       <Box sx={{ px: 2, pt: '16px', flexShrink: 0 }}>
@@ -297,7 +301,7 @@ export default function PlaylistScreen({
           size="large" onClick={onReady} disabled={games.length === 0}
           sx={{ width: '100%', maxWidth: 400, py: 1.5 }}
         >
-          ▶ Ready to game
+          ▶ {isResuming ? 'Resume Session' : 'Ready to game'}
         </PrimaryButton>
       </Box>
 

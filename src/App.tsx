@@ -72,6 +72,8 @@ function App() {
   });
 
   const [currentGame, setCurrentGame] = useState<Game | null>(null);
+  // Tracks whether the user navigated to PlaylistScreen mid-session via the menu
+  const [isResumingPlaylist, setIsResumingPlaylist] = useState(false);
 
   // Persist state
   useEffect(() => {
@@ -83,9 +85,13 @@ function App() {
     setWeightPreference("light");
     setDraftGames([]);
     setCurrentGame(null);
+    setIsResumingPlaylist(false);
     setScreen("start");
     sessionStorage.removeItem(SESSION_KEY);
   };
+
+  // True once the session has begun (user has moved past PlaylistScreen)
+  // const sessionActive = screen === "suggestion" || screen === "confirm";
 
   const handlePlaylistGamesChange = (updated: Game[]) => {
     setSession(prev => ({ ...prev, playlistGames: updated, games: updated }));
@@ -136,6 +142,7 @@ function App() {
             games={session.playlistGames}
             weightPreference={weightPreference}
             isSorted={session.isSorted}
+            isResuming={isResumingPlaylist}
             onGamesChange={handlePlaylistGamesChange}
             onSort={handleSort}
             onAddGame={() => {
@@ -143,15 +150,23 @@ function App() {
               setScreen("create_list");
             }}
             onReady={() => {
-              const updatedSession = {
-                ...session,
-                games: session.playlistGames,
-                lastPlayed: undefined,
-                overriddenGame: undefined,
-              };
+              setIsResumingPlaylist(false);
+              const updatedSession = isResumingPlaylist
+                ? {
+                   ...session,
+                    // Keep the live queue as-is, just clear any pending override
+                    overriddenGame: undefined,
+                  }
+                : {
+                    ...session,
+                    games: session.playlistGames,
+                    lastPlayed: undefined,
+                    overriddenGame: undefined,
+                };
               setSession(updatedSession);
               goToSuggestion(updatedSession, weightPreference);
             }}
+            onMainMenu={handleRestart}
           />
         )}
 
@@ -161,6 +176,11 @@ function App() {
               game={currentGame}
               allGames={session.games}
               nextWeight={weightPreference}
+              onMainMenu={handleRestart}
+              onViewPlaylist={() => {
+                setIsResumingPlaylist(true);
+                setScreen("playlist");
+              }}
               onConfirm={() => {
                 const updatedSession = {
                   ...session,
@@ -209,6 +229,11 @@ function App() {
         {screen === "confirm" && currentGame && (
           <ConfirmScreen
             game={currentGame}
+            onMainMenu={handleRestart}
+            onViewPlaylist={() => {
+              setIsResumingPlaylist(true);
+              setScreen("playlist");
+            }}
             onNext={() => goToSuggestion(session, weightPreference)}
             onRestart={handleRestart}
           />
