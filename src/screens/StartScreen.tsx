@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import { StickyNote2 } from '@mui/icons-material';
+import AddIcon from '@mui/icons-material/Add';
 
 // M3 color tokens used here (dark scheme):
 //   Title text:   #6750A4  — light-scheme primary, used as brand accent on dark bg (matches Figma)
@@ -54,7 +54,7 @@ export default function StartScreen({ onStart }: Props) {
       */}
       <Button
         size="large"
-        startIcon={<StickyNote2 />}
+        startIcon={<AddIcon />}
         onClick={onStart}
         sx={{
           width: '100%',

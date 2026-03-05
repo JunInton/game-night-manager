@@ -4,18 +4,19 @@ import CreateListScreen from "./screens/CreateListScreen";
 import PlaylistScreen from "./screens/PlaylistScreen";
 import SuggestionScreen from "./screens/SuggestionScreen";
 import ConfirmScreen from "./screens/ConfirmScreen";
-import NoResultsScreen from "./screens/NoResultsScreen";
+import FinishedScreen from "./screens/FinishedScreen";
 import suggestNextGame from "./domain/suggestNextGame";
+import reinsertSkipped from "./domain/reinsertSkipped";
 import type { Game } from "./domain/types";
 import "./App.css";
 
-type Screen = "start" | "create_list" | "playlist" | "suggestion" | "confirm";
+type Screen = "start" | "create_list" | "playlist" | "suggestion" | "confirm" | "finished";
 
 type SessionState = {
   games: Game[];
   playlistGames: Game[];
+  playedGames: Game[];
   lastPlayed?: Game;
-  vetoedGames: Game[];
   overriddenGame?: Game;
   isSorted: boolean;
 };
@@ -23,7 +24,7 @@ type SessionState = {
 const SESSION_KEY = "gameNightSession";
 
 function defaultSession(): SessionState {
-  return { games: [], playlistGames: [], vetoedGames: [], isSorted: false };
+  return { games: [], playlistGames: [], playedGames: [], isSorted: false };
 }
 
 function App() {
@@ -41,7 +42,12 @@ function App() {
   const [session, setSession] = useState<SessionState>(() => {
     try {
       const saved = sessionStorage.getItem(SESSION_KEY);
-      if (saved) return JSON.parse(saved).session ?? defaultSession();
+      if (saved) {
+        const parsed = JSON.parse(saved).session ?? defaultSession();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { vetoedGames: _v, ...clean } = parsed;
+        return clean as SessionState;
+      }
     } catch { /* ignore */ }
     return defaultSession();
   });
@@ -95,14 +101,13 @@ function App() {
     }));
   };
 
-  // Compute and set the next suggested game, called whenever we navigate to suggestion screen.
-  // Accepts the latest session/preference values directly so we don't rely on stale state.
   const goToSuggestion = (
     updatedSession: SessionState,
-    updatedPreference: "light" | "heavy"
+    updatedPreference: "light" | "heavy",
+    skippedGame?: Game,
   ) => {
     const next = updatedSession.overriddenGame
-      ?? suggestNextGame(updatedSession.games, updatedSession.lastPlayed, updatedPreference, updatedSession.isSorted);
+      ?? suggestNextGame(updatedSession.games, updatedSession.lastPlayed, updatedPreference, updatedSession.isSorted, skippedGame);
     setCurrentGame(next);
     setScreen("suggestion");
   };
@@ -120,7 +125,7 @@ function App() {
             selectedGames={draftGames}
             onGamesChange={setDraftGames}
             onViewPlaylist={() => {
-              setSession(prev => ({ ...prev, games: draftGames, playlistGames: draftGames, vetoedGames: [] }));
+              setSession(prev => ({ ...prev, games: draftGames, playlistGames: draftGames }));
               setScreen("playlist");
             }}
           />
@@ -141,7 +146,6 @@ function App() {
               const updatedSession = {
                 ...session,
                 games: session.playlistGames,
-                vetoedGames: [] as Game[],
                 lastPlayed: undefined,
                 overriddenGame: undefined,
               };
@@ -162,16 +166,26 @@ function App() {
                   ...session,
                   games: session.games.filter(g => g.name !== currentGame.name),
                   lastPlayed: currentGame,
+                  playedGames: [...session.playedGames, currentGame],
                   overriddenGame: undefined,
                 };
                 setSession(updatedSession);
                 setScreen("confirm");
               }}
-              onVeto={() => {
+              onSkip={() => {
+                const skipped = currentGame;
+                const updatedSession = {
+                  ...session,
+                  games: reinsertSkipped(session.games, skipped),
+                  overriddenGame: undefined,
+                };
+                setSession(updatedSession);
+                goToSuggestion(updatedSession, weightPreference, skipped);
+              }}
+              onRemove={() => {
                 const updatedSession = {
                   ...session,
                   games: session.games.filter(g => g.name !== currentGame.name),
-                  vetoedGames: [...session.vetoedGames, currentGame],
                   overriddenGame: undefined,
                 };
                 setSession(updatedSession);
@@ -185,21 +199,9 @@ function App() {
               }}
             />
           ) : (
-            <NoResultsScreen
-              vetoedGames={session.vetoedGames}
+            <FinishedScreen
+              playlistGames={session.playedGames}
               onRestart={handleRestart}
-              onReplayVetoed={() => {
-                const updatedSession = {
-                  games: session.vetoedGames,
-                  playlistGames: session.vetoedGames,
-                  vetoedGames: [] as Game[],
-                  lastPlayed: undefined,
-                  isSorted: false,
-                };
-                setSession(updatedSession);
-                setWeightPreference("light");
-                goToSuggestion(updatedSession, "light");
-              }}
             />
           )
         )}

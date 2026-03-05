@@ -11,13 +11,20 @@ export default function suggestNextGame(
   games: Game[],
   lastPlayed?: Game,
   weightPreference: "light" | "heavy" = "light",
-  isSorted: boolean = false
+  isSorted: boolean = false,
+  skippedGame?: Game,
 ): Game | null {
   if (games.length === 0) return null;
 
   // When the user has explicitly sorted the playlist, honour that order exactly.
   // games[0] is always the next intended game.
-  if (isSorted) return games[0];
+  // If the front of the sorted list is the game we just skipped, take the next one.
+  if (isSorted) {
+    const next = skippedGame
+      ? games.find(g => g.name !== skippedGame.name)
+      : games[0];
+    return next ?? null;
+  }
 
   let targetWeight: "light" | "heavy";
 
@@ -29,12 +36,19 @@ export default function suggestNextGame(
     targetWeight = lastPlayed.weight === "heavy" ? "light" : "heavy";
   }
 
-  const matching = games.filter(g => g.weight === targetWeight);
+  // Never suggest the game that was just skipped.
+  const candidates = skippedGame
+    ? games.filter(g => g.name !== skippedGame.name)
+    : games;
+
+  if (candidates.length === 0) return games[0] ?? null;
+
+  const matching = candidates.filter(g => g.weight === targetWeight);
 
   if (matching.length > 0) {
     return matching[Math.floor(Math.random() * matching.length)];
   }
 
   // Fallback: no games of the preferred weight remain, pick from whatever is left
-  return games[Math.floor(Math.random() * games.length)] ?? null;
+  return candidates[Math.floor(Math.random() * candidates.length)] ?? null;
 }

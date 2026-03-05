@@ -9,6 +9,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Chip from '@mui/material/Chip';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
+import Snackbar from '@mui/material/Snackbar';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -23,7 +24,8 @@ type Props = {
   allGames: Game[];
   nextWeight: "light" | "heavy";
   onConfirm: () => void;
-  onVeto: () => void;
+  onSkip: () => void;
+  onRemove: () => void;
   onWeightPreferenceChange: (weight: "light" | "heavy") => void;
   onOverride: (selectedGame: Game) => void;
 };
@@ -55,12 +57,29 @@ function PlaceholderArt() {
 }
 
 export default function SuggestionScreen({
-  game, allGames, onConfirm, onVeto, onOverride,
+  game, allGames, onConfirm, onSkip, onRemove, onOverride,
 }: Props) {
   const [overrideOpen, setOverrideOpen] = useState(false);
-  // "Pick a game" is a second view inside the same bottom sheet
   const [pickGameOpen, setPickGameOpen] = useState(false);
+  const [skipSnackbarOpen, setSkipSnackbarOpen] = useState(false);
+  const [skippedGameName, setSkippedGameName] = useState('');
+  const [removeSnackbarOpen, setRemoveSnackbarOpen] = useState(false);
+  const [removedGameName, setRemovedGameName] = useState('');
   const otherGames = allGames.filter(g => g.name !== game.name);
+
+  const handleSkip = () => {
+    setSkippedGameName(game.name);
+    setSkipSnackbarOpen(true);
+    onSkip();
+  };
+
+  const handleRemove = () => {
+    setRemovedGameName(game.name);
+    setRemoveSnackbarOpen(true);
+    setOverrideOpen(false);
+    setPickGameOpen(false);
+    onRemove();
+  };
 
   const handleOverrideSelect = (selected: Game) => {
     onOverride(selected);
@@ -161,12 +180,13 @@ export default function SuggestionScreen({
           Play
         </PrimaryButton>
 
-        {/* Skip + optional chevron — take ~1/3 of the row */}
+        {/* Skip + chevron — always a split button. Skip disabled when this is the last game. */}
         <Box sx={{ flex: 1, display: 'flex' }}>
           <Button
             variant="contained"
             size="large"
-            onClick={onVeto}
+            onClick={handleSkip}
+            disabled={otherGames.length === 0}
             sx={{
               flex: 1,
               py: 1.5,
@@ -175,35 +195,37 @@ export default function SuggestionScreen({
               boxShadow: 'none',
               bgcolor: '#49454E',
               color: '#E6E0E9',
-              borderRadius: otherGames.length > 0 ? '100px 0 0 100px' : 100,
+              borderRadius: '100px 0 0 100px',
               '&:hover': { bgcolor: '#544F59', boxShadow: 'none' },
+              '&.Mui-disabled': {
+                bgcolor: '#2C2A2F',
+                color: 'rgba(230, 224, 233, 0.35)',
+              },
             }}
           >
             <SkipNextIcon sx={{ mr: 0.5, fontSize: '1.1rem' }} />
             Skip
           </Button>
 
-          {otherGames.length > 0 && (
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => setOverrideOpen(true)}
-              aria-label="Choose a different game"
-              sx={{
-                minWidth: 0,
-                px: 1.5,
-                py: 1.5,
-                boxShadow: 'none',
-                bgcolor: '#49454E',
-                color: '#E6E0E9',
-                borderLeft: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: '0 100px 100px 0',
-                '&:hover': { bgcolor: '#544F59', boxShadow: 'none' },
-              }}
-            >
-              <KeyboardArrowDownIcon />
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => setOverrideOpen(true)}
+            aria-label="More options"
+            sx={{
+              minWidth: 0,
+              px: 1.5,
+              py: 1.5,
+              boxShadow: 'none',
+              bgcolor: '#49454E',
+              color: '#E6E0E9',
+              borderLeft: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '0 100px 100px 0',
+              '&:hover': { bgcolor: '#544F59', boxShadow: 'none' },
+            }}
+          >
+            <KeyboardArrowDownIcon />
+          </Button>
         </Box>
       </Box>
 
@@ -254,9 +276,8 @@ export default function SuggestionScreen({
               {/* Option 1: Switch weight */}
               <ListItem disablePadding sx={{ mb: 1 }}>
                 <ListItemButton
+                  disabled={otherGames.length === 0}
                   onClick={() => {
-                    // Suggest the opposite weight by calling onOverride with a
-                    // game of the opposite weight from the remaining games
                     const oppositeWeight = game.weight === 'heavy' ? 'light' : 'heavy';
                     const match = otherGames.find(g => g.weight === oppositeWeight)
                       ?? otherGames[0];
@@ -266,9 +287,9 @@ export default function SuggestionScreen({
                     borderRadius: 3,
                     px: 2, py: 1.5,
                     '&:hover': { bgcolor: 'rgba(103,80,164,0.12)' },
+                    '&.Mui-disabled': { opacity: 0.38 },
                   }}
                 >
-                  {/* Radio-style indicator */}
                   <Box sx={{
                     width: 20, height: 20, borderRadius: '50%',
                     border: '2px solid #CFBDFE',
@@ -281,7 +302,7 @@ export default function SuggestionScreen({
                     primary={`Switch to a ${game.weight === 'heavy' ? 'light' : 'heavy'} game`}
                     secondary={game.weight === 'heavy'
                       ? 'Play a shorter, more casual game'
-                      : 'Play longer, more complex games'}
+                      : 'Play a longer, more complex game'}
                     primaryTypographyProps={{ variant: 'body1', fontWeight: 500 }}
                     secondaryTypographyProps={{ variant: 'body2' }}
                   />
@@ -290,13 +311,15 @@ export default function SuggestionScreen({
               </ListItem>
 
               {/* Option 2: Pick a specific game */}
-              <ListItem disablePadding>
+              <ListItem disablePadding sx={{ mb: 1 }}>
                 <ListItemButton
+                  disabled={otherGames.length === 0}
                   onClick={() => setPickGameOpen(true)}
                   sx={{
                     borderRadius: 3,
                     px: 2, py: 1.5,
                     '&:hover': { bgcolor: 'rgba(103,80,164,0.12)' },
+                    '&.Mui-disabled': { opacity: 0.38 },
                   }}
                 >
                   <Box sx={{
@@ -309,8 +332,36 @@ export default function SuggestionScreen({
                   </Box>
                   <ListItemText
                     primary="Pick a game"
-                    secondary="Choose a specific game to play"
+                    secondary="Choose a specific game from your playlist"
                     primaryTypographyProps={{ variant: 'body1', fontWeight: 500 }}
+                    secondaryTypographyProps={{ variant: 'body2' }}
+                  />
+                  <ArrowRightIcon sx={{ color: 'text.secondary', ml: 1 }} />
+                </ListItemButton>
+              </ListItem>
+
+              {/* Option 3: Remove from playlist */}
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={handleRemove}
+                  sx={{
+                    borderRadius: 3,
+                    px: 2, py: 1.5,
+                    '&:hover': { bgcolor: 'rgba(186, 26, 26, 0.12)' },
+                  }}
+                >
+                  <Box sx={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: '2px solid #FFB4AB',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    mr: 2, flexShrink: 0,
+                  }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#FFB4AB' }} />
+                  </Box>
+                  <ListItemText
+                    primary="Remove from playlist"
+                    secondary="Permanently remove this game from tonight's list"
+                    primaryTypographyProps={{ variant: 'body1', fontWeight: 500, color: '#FFB4AB' }}
                     secondaryTypographyProps={{ variant: 'body2' }}
                   />
                   <ArrowRightIcon sx={{ color: 'text.secondary', ml: 1 }} />
@@ -412,6 +463,50 @@ export default function SuggestionScreen({
           </Box>
         )}
       </Drawer>
+
+      {/* ── Skip snackbar ── */}
+      <Snackbar
+        open={skipSnackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSkipSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ bottom: { xs: 100 } }}
+      >
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 2,
+          px: 3, py: 1.5, bgcolor: '#E6E0E9',
+          borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', minWidth: '260px',
+        }}>
+          <Typography variant="body2" sx={{ color: '#322F35', flex: 1 }}>
+            <strong>{skippedGameName}</strong> moved later in the queue
+          </Typography>
+          <IconButton size="small" onClick={() => setSkipSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </Snackbar>
+
+      {/* ── Remove snackbar ── */}
+      <Snackbar
+        open={removeSnackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setRemoveSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ bottom: { xs: 100 } }}
+      >
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 2,
+          px: 3, py: 1.5, bgcolor: '#E6E0E9',
+          borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', minWidth: '260px',
+        }}>
+          <Typography variant="body2" sx={{ color: '#322F35', flex: 1 }}>
+            <strong>{removedGameName}</strong> removed from playlist
+          </Typography>
+          <IconButton size="small" onClick={() => setRemoveSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </Snackbar>
     </ScreenLayout>
   );
 }
