@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
 import UTurnRightIcon from '@mui/icons-material/UTurnRight';
 import { Header } from '../components/Header';
 import type { Game } from '../domain/types';
@@ -57,7 +58,9 @@ function FinishedCollage({ games }: { games: Game[] }) {
       bgcolor: 'rgba(103,80,164,0.15)',
     }}>
       {cells.length === 0 && (
-        <Box sx={{
+        <Box
+          aria-hidden="true"
+          sx={{
           gridColumn: '1/-1', gridRow: '1/-1',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: 'rgba(207,189,254,0.3)', fontSize: 64,
@@ -135,15 +138,13 @@ export default function FinishedScreen({ playlistGames, onRestart }: Props) {
           </Typography>
         </Box>
 
-        {/* Game list */}
+        {/* Game list — ListItem gives proper <li> semantics inside the <ul> (List) */}
         <List disablePadding>
           {playlistGames.map((game) => (
-            <Box
+            <ListItem
               key={game.bggId ?? game.name}
               sx={{
-                display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center',
                 px: 2,
                 py: 1.75,
               }}
@@ -157,7 +158,7 @@ export default function FinishedScreen({ playlistGames, onRestart }: Props) {
               >
                 {game.weight}
               </Typography>
-            </Box>
+            </ListItem>
           ))}
         </List>
       </Box>

@@ -22,6 +22,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import HomeIcon from '@mui/icons-material/Home';
+import { track } from '../analytics';
 
 type Props = {
   showToggle?: boolean;
@@ -43,7 +44,18 @@ export function Header({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const handleDrawerOpen = () => {
+    track("menu_opened");
+    setDrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    track("menu_closed", { action: "dismissed" });
+    setDrawerOpen(false);
+  };
+
   const handleMainMenuClick = () => {
+    track("menu_main_menu_tapped");
     setDrawerOpen(false);
     setConfirmOpen(true);
   };
@@ -53,7 +65,13 @@ export function Header({
     onMainMenu?.();
   };
 
+  const handleConfirmCancel = () => {
+    track("menu_main_menu_cancelled");
+    setConfirmOpen(false);
+  };
+
   const handleViewPlaylist = () => {
+    track("menu_view_playlist_tapped");
     setDrawerOpen(false);
     onViewPlaylist?.();
   };
@@ -77,7 +95,7 @@ export function Header({
             <IconButton
               edge="start"
               aria-label="open menu"
-              onClick={() => setDrawerOpen(true)}
+              onClick={handleDrawerOpen}
               sx={{ mr: 2 }}
             >
               <MenuIcon />
@@ -120,7 +138,7 @@ export function Header({
       <Drawer
         anchor="left"
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={handleDrawerClose}
         PaperProps={{
           sx: {
             width: 280,
@@ -150,7 +168,7 @@ export function Header({
           </Typography>
           <IconButton
             size="small"
-            onClick={() => setDrawerOpen(false)}
+            onClick={handleDrawerClose}
             aria-label="close menu"
             sx={{ color: 'text.secondary' }}
           >
@@ -219,7 +237,7 @@ export function Header({
       {/* ── Return to Main Menu confirmation dialog ── */}
       <Dialog
         open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        onClose={handleConfirmCancel}
         PaperProps={{
           sx: {
             bgcolor: '#2B2930',
@@ -239,7 +257,7 @@ export function Header({
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
           <Button
-            onClick={() => setConfirmOpen(false)}
+            onClick={handleConfirmCancel}
             sx={{ textTransform: 'none', color: 'text.secondary' }}
           >
             Cancel

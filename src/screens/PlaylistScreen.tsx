@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
 import Snackbar from '@mui/material/Snackbar';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
@@ -215,9 +216,24 @@ export default function PlaylistScreen({
         ) : (
           <List disablePadding>
             {games.map((game) => (
-              <Box
+              // ListItem gives us a proper <li> element, which is the correct semantic
+              // child for a <ul> (List). Using a plain Box here would break the list
+              // structure for screen readers navigating by list item.
+              <ListItem
                 key={game.bggId || game.name}
-                sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1 }}
+                disablePadding
+                sx={{ px: 2, py: 1 }}
+                secondaryAction={
+                  <IconButton
+                    size="small"
+                    edge="end"
+                    aria-label={`Remove ${game.name}`}
+                    onClick={() => handleRemove(game)}
+                    sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
+                  >
+                    <CancelIcon fontSize="small" />
+                  </IconButton>
+                }
               >
                 {/* Thumbnail */}
                 {(game.thumbnailUrl || game.imageUrl) ? (
@@ -225,11 +241,11 @@ export default function PlaylistScreen({
                     component="img"
                     src={game.thumbnailUrl || game.imageUrl}
                     alt={game.name}
-                    sx={{ width: 48, height: 48, borderRadius: 0.5, objectFit: 'cover', flexShrink: 0 }}
+                    sx={{ width: 48, height: 48, borderRadius: 0.5, objectFit: 'cover', flexShrink: 0, mr: 1 }}
                   />
                 ) : (
-                  <Box sx={{
-                    width: 48, height: 48, borderRadius: 0.5, flexShrink: 0,
+                  <Box aria-hidden="true" sx={{
+                    width: 48, height: 48, borderRadius: 0.5, flexShrink: 0, mr: 1,
                     background: 'linear-gradient(135deg, rgba(103,80,164,0.3) 0%, rgba(103,80,164,0.55) 100%)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 18, fontWeight: 700, color: 'rgba(255,255,255,0.8)',
@@ -271,21 +287,12 @@ export default function PlaylistScreen({
                     textTransform: 'capitalize',
                     flexShrink: 0,
                     whiteSpace: 'nowrap',
+                    mr: 4,
                   }}
                 >
                   {game.weight}
                 </Box>
-
-                {/* Delete icon */}
-                <IconButton
-                  size="small"
-                  aria-label={`Remove ${game.name}`}
-                  onClick={() => handleRemove(game)}
-                  sx={{ color: 'text.disabled', flexShrink: 0, '&:hover': { color: 'error.main' } }}
-                >
-                  <CancelIcon fontSize="small" />
-                </IconButton>
-              </Box>
+              </ListItem>
             ))}
           </List>
         )}
@@ -312,7 +319,7 @@ export default function PlaylistScreen({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{ bottom: { xs: 84 } }}
       >
-        <Box sx={{
+        <Box role="status" sx={{
           display: 'flex', alignItems: 'center', gap: 2,
           px: 3, py: 1.5, bgcolor: '#E6E0E9',
           borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', minWidth: '260px',
@@ -320,7 +327,7 @@ export default function PlaylistScreen({
           <Typography variant="body2" sx={{ color: '#322F35', flex: 1 }}>
             <strong>{lastRemovedGame?.name}</strong> removed from playlist
           </Typography>
-          <IconButton size="small" onClick={() => setSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
+          <IconButton size="small" aria-label="Dismiss notification" onClick={() => setSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -332,7 +339,7 @@ export default function PlaylistScreen({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{ bottom: { xs: 84 } }}
       >
-        <Box sx={{
+        <Box role="status" sx={{
           display: 'flex', alignItems: 'center', gap: 2,
           px: 3, py: 1.5, bgcolor: '#E6E0E9',
           borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', minWidth: '260px',
@@ -340,7 +347,7 @@ export default function PlaylistScreen({
           <Typography variant="body2" sx={{ color: '#322F35', flex: 1 }}>
             Game order sorted to <strong>{sortLabel}</strong>
           </Typography>
-          <IconButton size="small" onClick={() => setSortSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
+          <IconButton size="small" aria-label="Dismiss notification" onClick={() => setSortSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>

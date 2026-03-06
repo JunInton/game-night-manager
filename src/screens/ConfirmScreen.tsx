@@ -19,7 +19,7 @@ type Props = {
  * Mirrors the SuggestionScreen hero layout but is a simple holding screen —
  * the only primary action is "Next game" once they're done playing.
  */
-export default function ConfirmScreen({ game, onNext, onRestart, onViewPlaylist, onMainMenu }: Props) {
+export default function ConfirmScreen({ game, onNext, onViewPlaylist, onMainMenu }: Props) {
   const formatPlayTime = (minutes?: number) => {
     if (!minutes) return null;
     if (minutes < 60) return `${minutes} min`;
@@ -114,7 +114,7 @@ export default function ConfirmScreen({ game, onNext, onRestart, onViewPlaylist,
         maxWidth: 480,
         mx: 'auto',
       }}>
-        <Button
+        {/* <Button
           variant="text"
           onClick={onRestart}
           sx={{
@@ -125,7 +125,7 @@ export default function ConfirmScreen({ game, onNext, onRestart, onViewPlaylist,
           }}
         >
           Restart from beginning (testing only)
-        </Button>
+        </Button> */}
 
         {/*
           "Finish gameplay" button

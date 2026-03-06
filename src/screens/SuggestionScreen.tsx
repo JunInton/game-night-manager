@@ -10,11 +10,18 @@ import Chip from '@mui/material/Chip';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
+import Divider from '@mui/material/Divider';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import CloseIcon from '@mui/icons-material/Close';
+import NightsStayIcon from '@mui/icons-material/NightsStay';
 import type { Game } from "../domain/types";
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenLayout } from '../components/ScreenLayout';
@@ -30,6 +37,7 @@ type Props = {
   onOverride: (selectedGame: Game) => void;
   onViewPlaylist: () => void;
   onMainMenu: () => void;
+  onEndNight: () => void;
 };
 
 function PlaceholderArt() {
@@ -39,7 +47,8 @@ function PlaceholderArt() {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       bgcolor: 'rgba(103, 80, 164, 0.08)',
     }}>
-      <svg width="180" height="160" viewBox="0 0 180 160" fill="none">
+      {/* aria-hidden: purely decorative illustration — screen readers should skip it */}
+      <svg aria-hidden="true" width="180" height="160" viewBox="0 0 180 160" fill="none">
         <path d="M90 18C90 18 122 60 122 82C122 100.778 107.778 116 89 116C70.222 116 56 100.778 56 82C56 60 90 18Z"
           fill="rgba(207, 189, 254, 0.45)" />
         <g transform="translate(38, 108)">
@@ -59,7 +68,7 @@ function PlaceholderArt() {
 }
 
 export default function SuggestionScreen({
-  game, allGames, onConfirm, onSkip, onRemove, onOverride,onViewPlaylist, onMainMenu
+  game, allGames, onConfirm, onSkip, onRemove, onOverride, onViewPlaylist, onMainMenu, onEndNight
 }: Props) {
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [pickGameOpen, setPickGameOpen] = useState(false);
@@ -67,6 +76,7 @@ export default function SuggestionScreen({
   const [skippedGameName, setSkippedGameName] = useState('');
   const [removeSnackbarOpen, setRemoveSnackbarOpen] = useState(false);
   const [removedGameName, setRemovedGameName] = useState('');
+  const [endNightConfirmOpen, setEndNightConfirmOpen] = useState(false);
   const otherGames = allGames.filter(g => g.name !== game.name);
 
   const handleSkip = () => {
@@ -241,10 +251,13 @@ export default function SuggestionScreen({
             1. Default: two radio-style options ("Switch weight" / "Pick a game")
             2. pickGameOpen: the full playlist list to choose from
       ── */}
+      {/* aria-labelledby links the Drawer to its visible heading so screen readers
+          announce "Game options" (or "Pick a game to skip to") when the sheet opens */}
       <Drawer
         anchor="bottom"
         open={overrideOpen}
         onClose={handleSheetClose}
+        aria-labelledby="override-sheet-title"
         PaperProps={{
           sx: {
             borderRadius: '28px 28px 0 0',
@@ -257,8 +270,8 @@ export default function SuggestionScreen({
           },
         }}
       >
-        {/* Drag handle */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1.5, pb: 0.5 }}>
+        {/* Drag handle — purely decorative, screen readers should skip it */}
+        <Box aria-hidden="true" sx={{ display: 'flex', justifyContent: 'center', pt: 1.5, pb: 0.5 }}>
           <Box sx={{ width: 32, height: 4, borderRadius: 2, bgcolor: '#49454E' }} />
         </Box>
 
@@ -266,10 +279,11 @@ export default function SuggestionScreen({
           /* ── View 1: two options ── */
           <Box sx={{ px: 2, pb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
-              <Typography variant="titleLarge" sx={{ px: '24px' }}>
+              {/* id matches aria-labelledby on the Drawer */}
+              <Typography id="override-sheet-title" variant="titleLarge" sx={{ px: '24px' }}>
                 Change game
               </Typography>
-              <IconButton size="small" onClick={handleSheetClose} sx={{ color: 'text.secondary' }}>
+              <IconButton size="small" onClick={handleSheetClose} aria-label="Close options" sx={{ color: 'text.secondary' }}>
                 <CloseIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -369,6 +383,32 @@ export default function SuggestionScreen({
                   <ArrowRightIcon sx={{ color: 'text.secondary', ml: 1 }} />
                 </ListItemButton>
               </ListItem>
+
+              {/* Divider before the destructive end-night action */}
+              <Divider sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+
+              {/* Option 4: End the Night early */}
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => {
+                    setOverrideOpen(false);
+                    setEndNightConfirmOpen(true);
+                  }}
+                  sx={{
+                    borderRadius: 3,
+                    px: 2, py: 1.5,
+                    '&:hover': { bgcolor: 'rgba(186, 26, 26, 0.12)' },
+                  }}
+                >
+                  <NightsStayIcon sx={{ color: '#FFB4AB', mr: 2, flexShrink: 0, fontSize: '1.25rem' }} />
+                  <ListItemText
+                    primary="End the Night early"
+                    secondary="Wrap up and see a summary of what you played"
+                    primaryTypographyProps={{ variant: 'body1', fontWeight: 500, color: '#FFB4AB' }}
+                    secondaryTypographyProps={{ variant: 'body2' }}
+                  />
+                </ListItemButton>
+              </ListItem>
             </List>
           </Box>
         ) : (
@@ -387,7 +427,7 @@ export default function SuggestionScreen({
               <Typography variant="titleLarge" sx={{ flex: 1 }}>
                 Pick a game to skip to
               </Typography>
-              <IconButton size="small" onClick={handleSheetClose} sx={{ color: 'text.secondary' }}>
+              <IconButton size="small" onClick={handleSheetClose} aria-label="Close game picker" sx={{ color: 'text.secondary' }}>
                 <CloseIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -474,7 +514,9 @@ export default function SuggestionScreen({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{ bottom: { xs: 100 } }}
       >
-        <Box sx={{
+        {/* role="status" makes this a live region — screen readers will announce
+            the message when the snackbar appears, without interrupting the user */}
+        <Box role="status" sx={{
           display: 'flex', alignItems: 'center', gap: 2,
           px: 3, py: 1.5, bgcolor: '#E6E0E9',
           borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', minWidth: '260px',
@@ -482,7 +524,7 @@ export default function SuggestionScreen({
           <Typography variant="body2" sx={{ color: '#322F35', flex: 1 }}>
             <strong>{skippedGameName}</strong> moved later in the queue
           </Typography>
-          <IconButton size="small" onClick={() => setSkipSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
+          <IconButton size="small" aria-label="Dismiss notification" onClick={() => setSkipSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -496,7 +538,7 @@ export default function SuggestionScreen({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{ bottom: { xs: 100 } }}
       >
-        <Box sx={{
+        <Box role="status" sx={{
           display: 'flex', alignItems: 'center', gap: 2,
           px: 3, py: 1.5, bgcolor: '#E6E0E9',
           borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', minWidth: '260px',
@@ -504,11 +546,52 @@ export default function SuggestionScreen({
           <Typography variant="body2" sx={{ color: '#322F35', flex: 1 }}>
             <strong>{removedGameName}</strong> removed from playlist
           </Typography>
-          <IconButton size="small" onClick={() => setRemoveSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
+          <IconButton size="small" aria-label="Dismiss notification" onClick={() => setRemoveSnackbarOpen(false)} sx={{ color: '#605D62', p: 0.25 }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
       </Snackbar>
+      {/* ── End the Night confirmation dialog ── */}
+      <Dialog
+        open={endNightConfirmOpen}
+        onClose={() => setEndNightConfirmOpen(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: '#2B2930',
+            backgroundImage: 'none',
+            borderRadius: 3,
+            mx: 3,
+          },
+        }}
+      >
+        <DialogTitle variant="titleLarge">
+          End the Night?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'text.secondary' }}>
+            You'll see a summary of the games you played tonight.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          <Button
+            onClick={() => setEndNightConfirmOpen(false)}
+            sx={{ textTransform: 'none', color: 'text.secondary' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              setEndNightConfirmOpen(false);
+              onEndNight();
+            }}
+            variant="contained"
+            color="error"
+            sx={{ textTransform: 'none', borderRadius: 100, px: 2.5 }}
+          >
+            End the Night
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ScreenLayout>
   );
 }
