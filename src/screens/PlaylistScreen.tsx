@@ -16,21 +16,21 @@ import type { Game } from "../domain/types";
 
 type Props = {
   games: Game[];
-  weightPreference: "light" | "heavy";
-  isSorted: boolean;
+  weightPreference: "light" | "heavy";  // current sort direction
+  isSorted: boolean;                     // true once the user has clicked the sort button
   onGamesChange: (games: Game[]) => void;
   onSort: (newPreference: "light" | "heavy", sortedGames: Game[]) => void;
-  onAddGame: () => void;
-  onReady: () => void;
-  // True when the user navigates here mid-session via the hamburger menu
+  onAddGame: () => void;   // navigate back to CreateListScreen
+  onReady: () => void;     // start (or resume) the session
+  // True when the user navigates here mid-session via the hamburger menu.
+  // Controls the CTA label ("Ready to game" vs "Resume Session") and
+  // whether App.tsx resets lastPlayed when returning to suggestion mode.
   isResuming?: boolean;
   onMainMenu?: () => void;
 };
 
-// ---------------------------------------------------------------------------
-// PlaylistCover — 2×2 collage, minimal rounding (borderRadius: 1 = 4px)
-// ---------------------------------------------------------------------------
-
+// ─── PlaylistCover helpers ────────────────────────────────────────────────────
+// Same tint array as FinishedScreen — four purple shades for placeholder cells.
 const COVER_TINTS = [
   'rgba(103, 80, 164, 0.55)',
   'rgba(103, 80, 164, 0.35)',
@@ -38,6 +38,10 @@ const COVER_TINTS = [
   'rgba(103, 80, 164, 0.25)',
 ];
 
+// ─── Cell ─────────────────────────────────────────────────────────────────────
+// Renders one of the four cells in the playlist cover collage.
+// Prefers thumbnailUrl (small square crop) over imageUrl for performance.
+// If neither exists, shows a coloured placeholder with the game's first letter.
 function Cell({ game, idx }: { game?: Game; idx: number }) {
   return (game?.thumbnailUrl || game?.imageUrl) ? (
     <Box
@@ -58,13 +62,21 @@ function Cell({ game, idx }: { game?: Game; idx: number }) {
   );
 }
 
+// ─── PlaylistCover ────────────────────────────────────────────────────────────
+// A small 80×80 thumbnail that shows up to 4 game covers in a 2×2 grid.
+// Similar to FinishedCollage but smaller, used inline in the playlist header row.
+//
+// Layout rules:
+//   0 games → dice emoji centred
+//   1 game  → single image spanning all 4 cells
+//   2–4     → one game per cell
 function PlaylistCover({ games }: { games: Game[] }) {
   const coverGames = games.slice(0, 4);
 
   return (
     <Box sx={{
       width: 80, height: 80,
-      // Minimal rounding — 4px matches the slight corner rounding visible in Figma
+      // borderRadius: 1 = 4px — minimal rounding matching the Figma design
       borderRadius: 1,
       overflow: 'hidden',
       flexShrink: 0,
@@ -92,44 +104,61 @@ function PlaylistCover({ games }: { games: Game[] }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// PlaylistScreen
-// ---------------------------------------------------------------------------
+// ─── PlaylistScreen ───────────────────────────────────────────────────────────
 export default function PlaylistScreen({
   games, weightPreference, isSorted, onGamesChange, onSort, onAddGame, onReady,
   isResuming = false, onMainMenu,
 }: Props) {
+  // Track the last removed game so the snackbar knows what name to show.
   const [lastRemovedGame, setLastRemovedGame] = useState<Game | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  // Sort snackbar — tells the user what order was applied.
   const [sortSnackbarOpen, setSortSnackbarOpen] = useState(false);
   const [sortLabel, setSortLabel] = useState("");
 
   const handleRemove = (game: Game) => {
+    // Filter by name (not index) so removals are stable even if the list re-orders.
     onGamesChange(games.filter(g => g.name !== game.name));
     setLastRemovedGame(game);
     setSnackbarOpen(true);
   };
 
+  // Live date + time shown in the playlist header (e.g. "Mar 6 · 7:30PM").
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  // .replace(/\s/, '') removes the space between the time and AM/PM: "7:30 PM" → "7:30PM"
   const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\s/, '');
 
-  // Shuffle an array in place using Fisher-Yates and return it
+  // ─── shuffle ───────────────────────────────────────────────────────────────
+  // Fisher-Yates in-place shuffle. Works backwards from the last element,
+  // swapping each element with a random element at or before its position.
+  // This produces an unbiased uniform random permutation.
+  // Note: mutates the input array and also returns it for convenience.
   const shuffle = <T,>(arr: T[]): T[] => {
     for (let i = arr.length - 1; i > 0; i--) {
+      // Pick a random index j in [0, i] (inclusive on both ends).
       const j = Math.floor(Math.random() * (i + 1));
+      // Swap elements at i and j using destructured assignment.
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
   };
 
-  // Interleave light and heavy games starting with the preferred weight.
-  // Each weight group is shuffled first so repeated sorts produce fresh orderings.
+  // ─── sortGamesByWeight ─────────────────────────────────────────────────────
+  // Interleaves light and heavy games starting with the preferred weight:
+  //   e.g. firstWeight="light", 3 light + 2 heavy → [L, H, L, H, L]
+  //
+  // Each group is shuffled first so the order within each weight category is
+  // random — clicking sort again produces a different arrangement.
   const sortGamesByWeight = (gamesToSort: Game[], firstWeight: "light" | "heavy"): Game[] => {
     const secondWeight = firstWeight === 'light' ? 'heavy' : 'light';
+    // shuffle() mutates the array, so we pass a fresh filtered copy each time.
     const first = shuffle(gamesToSort.filter(g => g.weight === firstWeight));
     const second = shuffle(gamesToSort.filter(g => g.weight === secondWeight));
     const result: Game[] = [];
+    // Zip the two arrays together: take one from first, one from second, repeat.
+    // maxLen ensures we don't stop early if one group is longer.
     const maxLen = Math.max(first.length, second.length);
     for (let i = 0; i < maxLen; i++) {
       if (i < first.length) result.push(first[i]);
@@ -138,6 +167,10 @@ export default function PlaylistScreen({
     return result;
   };
 
+  // ─── handleWeightToggle ────────────────────────────────────────────────────
+  // Toggles between "Light > Heavy" and "Heavy > Light" sort orders.
+  // Fires onSort with the new preference and a freshly sorted game array —
+  // App.tsx stores both so suggestNextGame respects the sorted order.
   const handleWeightToggle = () => {
     const newPreference = weightPreference === 'light' ? 'heavy' : 'light';
     const sorted = sortGamesByWeight(games, newPreference);
@@ -147,22 +180,27 @@ export default function PlaylistScreen({
     setSortSnackbarOpen(true);
   };
 
+  // Text label for the sort button — shows the current order.
+  // Highlighted in lighter purple (CFBDFE) once sorted, brand purple (6750A4) before.
   const weightLabel = weightPreference === 'light' ? 'Light > Heavy' : 'Heavy > Light';
 
   return (
+    // Full-height column: Header at top, scrollable game list in middle, fixed CTA at bottom.
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
+      {/* Header has no onViewPlaylist — you're already on PlaylistScreen.
+          onMainMenu lets the hamburger menu offer "Return to Main Menu". */}
       <Header onMainMenu={onMainMenu} />
 
-      {/* ── Playlist header ── */}
+      {/* ── Playlist header (collage + title + action row) ─────────────────── */}
       <Box sx={{ px: 2, pt: '16px', flexShrink: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <PlaylistCover games={games} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            {/* "Game playlist" — regular body typography, not Road Rage */}
+            {/* "Game playlist" in Roboto (not Road Rage) at 600 weight */}
             <Typography
               variant="h6"
               sx={{
-                fontFamily: 'inherit',  // use Roboto, not Road Rage
+                fontFamily: 'inherit',  // Roboto, not Road Rage
                 fontWeight: 600,
                 fontSize: '1.25rem',
                 lineHeight: 1.2,
@@ -171,14 +209,16 @@ export default function PlaylistScreen({
             >
               Game playlist
             </Typography>
+            {/* Live date + time stamp */}
             <Typography variant="caption" color="text.secondary">
               {dateStr} {timeStr}
             </Typography>
           </Box>
         </Box>
 
-        {/* Action row */}
+        {/* ── Action row: "Add game" + sort toggle ─────────────────────────── */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, pt: '16px', pb: '24px' }}>
+          {/* "Add game" navigates back to CreateListScreen */}
           <Button
             variant="outlined" size="small"
             startIcon={<AddIcon sx={{ fontSize: '1rem !important' }} />}
@@ -192,6 +232,7 @@ export default function PlaylistScreen({
             Add game
           </Button>
 
+          {/* Sort toggle — colour changes from brand purple to lighter purple once sorted */}
           <Button
             variant="text" size="small"
             startIcon={<SwapVertIcon sx={{ fontSize: '1.1rem !important', color: isSorted ? '#CFBDFE' : '#6750A4' }} />}
@@ -207,7 +248,8 @@ export default function PlaylistScreen({
         </Box>
       </Box>
 
-      {/* ── Game list ── */}
+      {/* ── Scrollable game list ──────────────────────────────────────────── */}
+      {/* pb: 14 reserves space above the fixed CTA so the last item is visible. */}
       <Box sx={{ flex: 1, overflow: 'auto', pb: 14 }}>
         {games.length === 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60%' }}>
@@ -216,9 +258,8 @@ export default function PlaylistScreen({
         ) : (
           <List disablePadding>
             {games.map((game) => (
-              // ListItem gives us a proper <li> element, which is the correct semantic
-              // child for a <ul> (List). Using a plain Box here would break the list
-              // structure for screen readers navigating by list item.
+              // ListItem renders as <li>, the correct semantic child for <ul> (List).
+              // secondaryAction places the remove button at the far right of the row.
               <ListItem
                 key={game.bggId || game.name}
                 disablePadding
@@ -229,13 +270,16 @@ export default function PlaylistScreen({
                     edge="end"
                     aria-label={`Remove ${game.name}`}
                     onClick={() => handleRemove(game)}
+                    // Default to text.disabled so the X isn't visually loud;
+                    // turns error red on hover as a warning before removal.
                     sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
                   >
                     <CancelIcon fontSize="small" />
                   </IconButton>
                 }
               >
-                {/* Thumbnail */}
+                {/* ── Thumbnail ─────────────────────────────────────────────── */}
+                {/* Prefer thumbnail (small square) over full image for faster loading. */}
                 {(game.thumbnailUrl || game.imageUrl) ? (
                   <Box
                     component="img"
@@ -244,6 +288,7 @@ export default function PlaylistScreen({
                     sx={{ width: 48, height: 48, borderRadius: 0.5, objectFit: 'cover', flexShrink: 0, mr: 1 }}
                   />
                 ) : (
+                  // aria-hidden: placeholder is decorative — screen readers get the name from the Typography below.
                   <Box aria-hidden="true" sx={{
                     width: 48, height: 48, borderRadius: 0.5, flexShrink: 0, mr: 1,
                     background: 'linear-gradient(135deg, rgba(103,80,164,0.3) 0%, rgba(103,80,164,0.55) 100%)',
@@ -254,7 +299,10 @@ export default function PlaylistScreen({
                   </Box>
                 )}
 
-                {/* Name — grows, clamps at 2 lines */}
+                {/* ── Game name ─────────────────────────────────────────────── */}
+                {/* flex: 1 makes the name fill available space between thumbnail and weight badge.
+                    WebkitLineClamp: 2 clamps long titles to two lines with an ellipsis.
+                    minWidth: 0 is required for text truncation inside flex containers. */}
                 <Typography
                   variant="body2"
                   sx={{
@@ -271,7 +319,8 @@ export default function PlaylistScreen({
                   {game.name}
                 </Typography>
 
-                {/* Weight badge */}
+                {/* ── Weight badge ───────────────────────────────────────────── */}
+                {/* mr: 4 leaves room for the secondaryAction remove button. */}
                 <Box
                   component="span"
                   sx={{
@@ -280,8 +329,8 @@ export default function PlaylistScreen({
                     px: 0.75,
                     py: 0.25,
                     borderRadius: 1,
-                    bgcolor: '#2B292F',
-                    color: '#E6E0E9',
+                    bgcolor: '#2B292F',   // dark.surfaceContainerHigh
+                    color: '#E6E0E9',    // dark.onSurface
                     fontSize: '0.6875rem',
                     fontWeight: 500,
                     textTransform: 'capitalize',
@@ -298,7 +347,9 @@ export default function PlaylistScreen({
         )}
       </Box>
 
-      {/* ── Fixed bottom CTA — PrimaryButton (tonal style) ── */}
+      {/* ── Fixed bottom CTA ──────────────────────────────────────────────── */}
+      {/* Label changes based on whether we're starting fresh or resuming.
+          Disabled when playlist is empty to prevent starting with no games. */}
       <Box sx={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
         p: 2, display: 'flex', justifyContent: 'center',
@@ -312,12 +363,14 @@ export default function PlaylistScreen({
         </PrimaryButton>
       </Box>
 
-      {/* ── Delete snackbar ── */}
+      {/* ── "Game removed" snackbar ────────────────────────────────────────── */}
+      {/* role="status" makes this a live region — screen readers announce
+          it without interrupting the user's current focus. */}
       <Snackbar
         open={snackbarOpen} autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ bottom: { xs: 84 } }}
+        sx={{ bottom: { xs: 84 } }}   // above the fixed CTA
       >
         <Box role="status" sx={{
           display: 'flex', alignItems: 'center', gap: 2,
@@ -332,7 +385,8 @@ export default function PlaylistScreen({
           </IconButton>
         </Box>
       </Snackbar>
-      {/* ── Sort snackbar ── */}
+
+      {/* ── "Sort applied" snackbar ────────────────────────────────────────── */}
       <Snackbar
         open={sortSnackbarOpen} autoHideDuration={3000}
         onClose={() => setSortSnackbarOpen(false)}

@@ -1,3 +1,11 @@
+/* ─── Global reset ───────────────────────────────────────────────────────────
+   Removes browser default spacing from the two root elements.
+   height: 100% lets children use percentage-based heights all the way down.
+   Font smoothing improves text rendering on macOS/iOS:
+     -webkit-font-smoothing: antialiased    → thinner, crisper text on Retina
+     -moz-osx-font-smoothing: grayscale     → same effect for Firefox on macOS
+   overflow: hidden prevents a second scrollbar appearing on the page itself —
+   individual screens manage their own internal scrolling instead. */
 html, body {
   margin: 0;
   padding: 0;
@@ -7,33 +15,52 @@ html, body {
   overflow: hidden;
 }
 
+/* Centers #root horizontally on wide screens (tablet/desktop).
+   Works in tandem with #root's max-width below to produce the
+   "phone frame centered on a dark background" effect. */
 body {
   display: flex;
   justify-content: center;
 }
 
+/* ─── App frame ──────────────────────────────────────────────────────────────
+   Constrains the entire app to a phone-width column.
+   max-width: 480px means the layout never stretches wider than a large phone
+   screen, even when viewed in a desktop browser.
+   position: relative is required so any absolutely/fixed-positioned children
+   that use this as their containing block behave correctly. */
 #root {
   width: 100%;
   max-width: 480px;
   min-height: 100vh;
-  /* padding: 16px; */
-  /* border: 1px solid #ddd; */
-  /* border-radius: 16px; */
+  /* padding: 16px; */       /* old inner gutter — now handled per-screen */
+  /* border: 1px solid #ddd; */   /* dev outline for visualising the frame */
+  /* border-radius: 16px; */      /* rounded phone-frame corners — not used in final design */
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
-  
 }
+
+/* Adds a soft glow around the app frame on tablet/desktop widths,
+   making it look like a phone sitting on a dark background. */
 @media (min-width: 768px) {
   #root {
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
   }
 }
 
+/* ─── Universal box model ────────────────────────────────────────────────────
+   Ensures padding and borders are included in an element's stated width/height
+   rather than added on top of it. Applied globally so layout maths is consistent
+   everywhere. (The html/body rule above doesn't cascade this to all elements,
+   so the * selector is needed to catch everything.) */
 * {
   box-sizing: border-box;
 }
 
+/* Prevents MUI (and the browser default) from rendering button text in a
+   generic system font. With this rule, buttons inherit the Roboto font stack
+   set on <body> by the MUI theme. */
 button {
   font-family: inherit;
 }

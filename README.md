@@ -1,6 +1,6 @@
 # Game Night Manager
 
-A suite of tools to manage game nights easier
+A growing toolkit for managing board game nights. Currently in early development — the first tool, Playlist Maker, is functional. More tools are planned as the project expands (see [Roadmap](#roadmap)).
 
 ## Playlist Maker
 
@@ -13,6 +13,15 @@ Build a playlist of board games for the evening, then let the app suggest what t
 - Sort, skip, remove, and override controls
 - Session persistence — closing and reopening the app resumes where you left off
 - Game night summary screen showing everything played
+
+## Roadmap
+
+Playlist Maker is the first of several planned tools. Future features include:
+
+- **Shared group collections** — a group maintains one shared game library rather than each person managing their own
+- **Group logins** — accounts tied to a friend group so your data follows you across devices
+- **Session archive** — a history of past game nights, who attended, and what was played
+- **Group stats** — win/loss records, most-played games, play time trends, and other stats tracked per group over time
 
 ## Status
 

@@ -24,6 +24,17 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import HomeIcon from '@mui/icons-material/Home';
 import { track } from '../analytics';
 
+// ─── Props ────────────────────────────────────────────────────────────────────
+// All props are optional — the header renders without a hamburger if neither
+// onViewPlaylist nor onMainMenu is provided (e.g. on FinishedScreen).
+//
+// showToggle / toggleState / onToggle: old toggle button API, currently unused
+// by any screen but kept for potential future use.
+//
+// onViewPlaylist: if provided, "View / Edit Playlist" appears in the side drawer.
+//                 Only passed during an active session.
+// onMainMenu:     if provided, "Return to Main Menu" appears in the drawer.
+//                 Always requires a two-step confirmation before firing.
 type Props = {
   showToggle?: boolean;
   toggleState?: boolean;
@@ -41,7 +52,11 @@ export function Header({
   onViewPlaylist,
   onMainMenu,
 }: Props) {
+  // drawerOpen controls the left-side navigation drawer.
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // confirmOpen controls the "Return to Main Menu?" confirmation dialog.
+  // We use a separate dialog (rather than a window.confirm) for consistency
+  // with the M3 design and to avoid blocking the browser's main thread.
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleDrawerOpen = () => {
@@ -54,17 +69,23 @@ export function Header({
     setDrawerOpen(false);
   };
 
+  // Tapping "Return to Main Menu" in the drawer closes the drawer first,
+  // then opens the confirmation dialog. This prevents the drawer from
+  // remaining open behind the dialog.
   const handleMainMenuClick = () => {
     track("menu_main_menu_tapped");
     setDrawerOpen(false);
     setConfirmOpen(true);
   };
 
+  // User confirmed they want to go to the main menu — fire the callback.
   const handleConfirm = () => {
     setConfirmOpen(false);
+    // ?. (optional chaining) — safe to call even if onMainMenu wasn't provided.
     onMainMenu?.();
   };
 
+  // User cancelled — close the dialog without doing anything.
   const handleConfirmCancel = () => {
     track("menu_main_menu_cancelled");
     setConfirmOpen(false);
@@ -76,11 +97,17 @@ export function Header({
     onViewPlaylist?.();
   };
 
-  // Don't render an interactive hamburger if there are no menu actions to show
+  // Don't render an interactive hamburger if there are no menu actions to show.
+  // On screens like FinishedScreen that pass no callbacks, the hamburger is
+  // replaced by an invisible placeholder Box so the title stays centred.
   const hasMenuActions = onViewPlaylist || onMainMenu;
 
   return (
     <>
+      {/* ── App bar ──────────────────────────────────────────────────────── */}
+      {/* position="static" means the bar scrolls with the page (not fixed).
+          elevation={0} removes the default MUI drop shadow.
+          backgroundColor is set to transparent so the page background shows through. */}
       <AppBar
         position="static"
         elevation={0}
@@ -101,10 +128,12 @@ export function Header({
               <MenuIcon />
             </IconButton>
           ) : (
-            // Inert placeholder so the title stays visually consistent
+            // Invisible placeholder — keeps the title horizontally centred
+            // even when there's no hamburger to its left.
             <Box sx={{ width: 40, mr: 2 }} />
           )}
 
+          {/* App title — always visible, Road Rage font, brand purple */}
           <Typography
             variant="h6"
             component="h1"
@@ -116,12 +145,17 @@ export function Header({
               letterSpacing: '0.1em',
               color: '#6750A4',
               background: 'none',
+              // WebkitTextFillColor overrides the CSS `color` property in
+              // WebKit-based browsers when a gradient is set. We set it
+              // explicitly to the flat colour so no gradient bleeds through.
               WebkitTextFillColor: '#6750A4',
             }}
           >
             Game Night Manager
           </Typography>
 
+          {/* Optional toggle button (currently unused — no screen passes showToggle).
+              When toggleState is true the icon is an X (Close); false shows a + (Add). */}
           {showToggle && onToggle && (
             <IconButton
               edge="end"
@@ -134,7 +168,8 @@ export function Header({
         </Toolbar>
       </AppBar>
 
-      {/* ── Navigation drawer ── */}
+      {/* ── Navigation drawer ─────────────────────────────────────────────── */}
+      {/* anchor="left" slides in from the left edge, matching standard mobile nav. */}
       <Drawer
         anchor="left"
         open={drawerOpen}
@@ -142,12 +177,12 @@ export function Header({
         PaperProps={{
           sx: {
             width: 280,
-            bgcolor: '#1C1B1F',
+            bgcolor: '#1C1B1F',    // dark.surfaceContainerLow — slightly darker than page
             backgroundImage: 'none',
           },
         }}
       >
-        {/* Drawer header */}
+        {/* Drawer header — title + close button */}
         <Box sx={{
           display: 'flex',
           alignItems: 'center',
@@ -179,7 +214,8 @@ export function Header({
         <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
 
         <List sx={{ pt: 1 }}>
-          {/* View / Edit Playlist — only during an active session */}
+          {/* "View / Edit Playlist" — only rendered during an active session.
+              App.tsx passes onViewPlaylist only from SuggestionScreen and ConfirmScreen. */}
           {onViewPlaylist && (
             <ListItem disablePadding>
               <ListItemButton
@@ -201,12 +237,15 @@ export function Header({
             </ListItem>
           )}
 
-          {/* Divider before the destructive action */}
+          {/* Divider separates navigation actions from the destructive "go home" action.
+              Only shown when both items are present — avoids a floating divider. */}
           {onViewPlaylist && onMainMenu && (
             <Divider sx={{ my: 1, borderColor: 'rgba(255,255,255,0.08)' }} />
           )}
 
-          {/* Return to Main Menu */}
+          {/* "Return to Main Menu" — destructive (resets the whole session).
+              Tapping this does NOT immediately fire onMainMenu; it opens the
+              confirmation dialog first (see handleMainMenuClick above). */}
           {onMainMenu && (
             <ListItem disablePadding>
               <ListItemButton
@@ -214,6 +253,7 @@ export function Header({
                 sx={{
                   borderRadius: 2,
                   mx: 1,
+                  // Subtle red tint on hover to signal this is a destructive action.
                   '&:hover': { bgcolor: 'rgba(207,72,72,0.1)' },
                 }}
               >
@@ -234,7 +274,10 @@ export function Header({
         </List>
       </Drawer>
 
-      {/* ── Return to Main Menu confirmation dialog ── */}
+      {/* ── Confirmation dialog ───────────────────────────────────────────── */}
+      {/* Two-step confirmation for the destructive "go home" action.
+          This pattern (drawer → dialog) prevents accidental session loss
+          while keeping the UI feel native and non-blocking. */}
       <Dialog
         open={confirmOpen}
         onClose={handleConfirmCancel}
@@ -243,7 +286,7 @@ export function Header({
             bgcolor: '#2B2930',
             backgroundImage: 'none',
             borderRadius: 3,
-            mx: 3,
+            mx: 3,   // horizontal margin so the dialog doesn't touch screen edges
           },
         }}
       >
@@ -262,6 +305,7 @@ export function Header({
           >
             Cancel
           </Button>
+          {/* Variant "contained" + color "error" gives the red destructive button. */}
           <Button
             onClick={handleConfirm}
             variant="contained"
