@@ -2,23 +2,30 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
-// import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 import type { Game } from "../domain/types";
-import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenLayout } from '../components/ScreenLayout';
 
 type Props = {
   game: Game;
-  onNext: () => void;
-  onRestart: () => void;
+  onNext: () => void;       // called when gameplay is done — moves to next suggestion
+  onRestart: () => void;    // currently unused (button is commented out), kept for future use
+  onViewPlaylist: () => void;
+  onMainMenu: () => void;
 };
 
 /**
  * Shown while the current game is being played.
  * Mirrors the SuggestionScreen hero layout but is a simple holding screen —
- * the only primary action is "Next game" once they're done playing.
+ * the only primary action is "Finish gameplay" once they're done playing.
+ * The user can still open the hamburger menu to view/edit the playlist or
+ * return to the main menu.
  */
-export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
+export default function ConfirmScreen({ game, onNext, onViewPlaylist, onMainMenu }: Props) {
+  // Converts a raw minutes number into a human-readable label.
+  // < 60 min → "45 min"
+  // exactly N hours → "2 hours"
+  // hours + remainder → "1h 30min"
   const formatPlayTime = (minutes?: number) => {
     if (!minutes) return null;
     if (minutes < 60) return `${minutes} min`;
@@ -26,42 +33,39 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
     const m = minutes % 60;
     return m > 0 ? `${h}h ${m}min` : `${h} hour${h > 1 ? 's' : ''}`;
   };
+  // Fall back to "~1 hour" when BGG doesn't provide a playing time.
   const playTimeLabel = formatPlayTime(game.playingTime) ?? '~1 hour';
 
   return (
-    <ScreenLayout>
-      {/* ── Now Playing label ── */}
+    <ScreenLayout headerProps={{ onViewPlaylist, onMainMenu }}>
+
+      {/* ── "Now Playing" label ────────────────────────────────────────────── */}
       <Box sx={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        pb: 1.5,
         gap: 0.75,
         mb: 1.5,
       }}>
-        {/* <CheckCircleIcon sx={{ fontSize: '1rem', color: '#6750A4' }} /> */}
-        <Typography
-          variant="h5"
-          // sx={{
-          //   color: '#6750A4',
-          //   fontWeight: 600,
-          //   textTransform: 'uppercase',
-          //   letterSpacing: '0.08em',
-          //   fontSize: '0.75rem',
-          // }}
-        >
+        <Typography variant="titleLarge">
           Now Playing
         </Typography>
       </Box>
 
-      {/* ── Hero image — same bleeds-to-edges style as SuggestionScreen ── */}
+      {/* ── Hero image ─────────────────────────────────────────────────────── */}
+      {/* Same full-bleed layout as SuggestionScreen:
+          width: calc(100% + 32px) on xs overrides the ScreenLayout padding so the
+          image bleeds to the left and right edges of the screen.
+          mx: -2 (= -16px) pulls the box into the negative margin to achieve the bleed. */}
       <Box sx={{
         width: { xs: 'calc(100% + 32px)', sm: 'calc(100% + 48px)' },
         mx: { xs: -2, sm: -3 },
         aspectRatio: '4 / 3',
-        borderRadius: 0,
+        borderRadius: 0,   // square corners — no rounding for full-bleed images
         overflow: 'hidden',
         mb: 2.5,
-        bgcolor: '#0f0d13',
+        bgcolor: '#0f0d13',   // very dark bg so transparent PNGs look good
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -69,11 +73,13 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
         {game.imageUrl ? (
           <Box
             component="img"
+            // BGG sometimes returns protocol-relative URLs ("//cdn…"); prefix with https:.
             src={game.imageUrl.startsWith('//') ? `https:${game.imageUrl}` : game.imageUrl}
             alt={game.name}
             sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
           />
         ) : (
+          // No image — show a subtle dice emoji as a placeholder.
           <Box sx={{
             width: '100%', height: '100%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -86,7 +92,7 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
         )}
       </Box>
 
-      {/* ── Game info ── */}
+      {/* ── Game info ──────────────────────────────────────────────────────── */}
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
           <Box sx={{ minWidth: 0 }}>
@@ -97,6 +103,7 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
               Estimated play time: {playTimeLabel}
             </Typography>
           </Box>
+          {/* Weight chip — top-right of the name block, never shrinks */}
           <Chip
             label={game.weight}
             size="small"
@@ -105,7 +112,10 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
         </Box>
       </Box>
 
-      {/* ── Fixed bottom action area ── */}
+      {/* ── Fixed bottom action area ────────────────────────────────────────── */}
+      {/* position: fixed keeps the button at the bottom of the viewport even
+          when the page content is taller than the screen. maxWidth + mx: auto
+          centres it in the app-frame column on wider screens. */}
       <Box sx={{
         position: 'fixed',
         bottom: 0,
@@ -122,29 +132,48 @@ export default function ConfirmScreen({ game, onNext, onRestart }: Props) {
         maxWidth: 480,
         mx: 'auto',
       }}>
+        {/* "Restart from beginning" button — currently commented out (testing only).
+            Uncomment to show a dev shortcut that calls onRestart directly.
+        <Button variant="text" onClick={onRestart} sx={{ … }}>
+          Restart from beginning (testing only)
+        </Button> */}
+
+        {/*
+          "Finish gameplay" button.
+          Styled as a dark outlined button (not the tonal PrimaryButton) to indicate
+          this ends the current game without being as prominent as a CTA.
+            bgcolor:  transparent
+            color:    dark.primary (#CFBDFE — light purple)
+            border:   dark.outlineVariant (#49454E)
+          Clicking calls onNext, which triggers goToSuggestion in App.tsx.
+        */}
         <Button
-          variant="text"
-          onClick={onRestart}
+          variant="contained"
+          size="large"
+          startIcon={<StopCircleOutlinedIcon />}
+          onClick={onNext}
           sx={{
-            color: 'text.secondary',
-            fontSize: '0.8rem',
+            width: '100%',
+            py: 1.5,
+            borderRadius: 100,
             textTransform: 'none',
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+            fontWeight: 600,
+            boxShadow: 'none',
+            bgcolor: 'transparent',
+            color: '#CFBDFE',            // dark.primary (light purple)
+            border: '1px solid #49454E', // dark.outlineVariant
+            '&:hover': {
+              bgcolor: '#36343A',         // dark.surfaceContainerHighest — subtle fill on hover
+              boxShadow: 'none',
+            },
           }}
         >
-          Restart from beginning (testing only)
+          Finish gameplay
         </Button>
-        <PrimaryButton
-          size="large"
-          onClick={onNext}
-          sx={{ width: '100%', py: 1.5 }}
-        >
-          Next game
-        </PrimaryButton>
 
       </Box>
 
-      {/* Padding so content doesn't hide behind fixed button area */}
+      {/* Spacer so scrollable content doesn't hide behind the fixed button area */}
       <Box sx={{ height: 160 }} />
     </ScreenLayout>
   );
