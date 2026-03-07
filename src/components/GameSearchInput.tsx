@@ -19,8 +19,7 @@ type Props = {
 
 // NOTE: The inline dropdown (Popper) approach was replaced by rendering the
 // results list directly below the search field in CreateListScreen. The
-// commented-out block below is the old implementation and can be deleted once
-// you're confident the new approach is stable.
+// commented-out block below is the old implementation.
 
 // async function searchBGG(query: string) {
 //   try {
