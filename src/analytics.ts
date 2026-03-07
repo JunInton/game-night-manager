@@ -15,7 +15,7 @@ export function initAnalytics() {
   }
   posthog.init(key, {
     api_host: "https://us.i.posthog.com",
-    person_profiles: "identified_only", // don't create profiles for anonymous users
+    person_profiles: "always", // enable user profiles for PostHog surveys
     capture_pageview: false,            // SPA — we'll track screens manually if needed
   });
 }
