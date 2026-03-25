@@ -58,7 +58,7 @@ declare module '@mui/material/styles' {
   // that `colorSchemes: { dark: { … } }` is an accepted configuration.
   interface ColorSchemeOverrides {
     dark: true
-    light: true
+    // light: true
   }
 }
 
@@ -148,43 +148,43 @@ const theme = extendTheme({
     // Light scheme — included for completeness but the app currently always uses dark.
     // If you add a theme toggle later, use the useColorScheme() hook from
     // @mui/material/styles anywhere in the component tree.
-    light: {
-      palette: {
-        primary: {
-          main: '#65558F',          // light.primary
-          contrastText: '#FFFFFF',  // light.onPrimary
-          light: '#E9DDFF',         // light.primaryContainer
-          dark: '#4D3D75',          // light.onPrimaryContainer
-        },
-        secondary: {
-          main: '#625B71',          // light.secondary
-          contrastText: '#FFFFFF',  // light.onSecondary
-          light: '#E8DEF8',         // light.secondaryContainer
-          dark: '#4A4458',          // light.onSecondaryContainer
-        },
-        tertiary: {
-          main: '#7E5260',          // light.tertiary
-          contrastText: '#FFFFFF',  // light.onTertiary
-          light: '#FFD9E3',         // light.tertiaryContainer
-          dark: '#633B48',          // light.onTertiaryContainer
-        },
-        error: {
-          main: '#BA1A1A',          // light.error
-          contrastText: '#FFFFFF',  // light.onError
-          light: '#FFDAD6',         // light.errorContainer
-          dark: '#93000A',          // light.onErrorContainer
-        },
-        background: {
-          default: '#FDF7FF',       // light.background — very light purple-tinted white
-          paper: '#F2ECF4',         // light.surfaceContainer
-        },
-        text: {
-          primary: '#1D1B20',       // light.onSurface — near-black
-          secondary: '#49454E',     // light.onSurfaceVariant — medium grey
-        },
-        divider: '#CAC4CF',         // light.outlineVariant
-      },
-    },
+    // light: {
+    //   palette: {
+    //     primary: {
+    //       main: '#65558F',          // light.primary
+    //       contrastText: '#FFFFFF',  // light.onPrimary
+    //       light: '#E9DDFF',         // light.primaryContainer
+    //       dark: '#4D3D75',          // light.onPrimaryContainer
+    //     },
+    //     secondary: {
+    //       main: '#625B71',          // light.secondary
+    //       contrastText: '#FFFFFF',  // light.onSecondary
+    //       light: '#E8DEF8',         // light.secondaryContainer
+    //       dark: '#4A4458',          // light.onSecondaryContainer
+    //     },
+    //     tertiary: {
+    //       main: '#7E5260',          // light.tertiary
+    //       contrastText: '#FFFFFF',  // light.onTertiary
+    //       light: '#FFD9E3',         // light.tertiaryContainer
+    //       dark: '#633B48',          // light.onTertiaryContainer
+    //     },
+    //     error: {
+    //       main: '#BA1A1A',          // light.error
+    //       contrastText: '#FFFFFF',  // light.onError
+    //       light: '#FFDAD6',         // light.errorContainer
+    //       dark: '#93000A',          // light.onErrorContainer
+    //     },
+    //     background: {
+    //       default: '#FDF7FF',       // light.background — very light purple-tinted white
+    //       paper: '#F2ECF4',         // light.surfaceContainer
+    //     },
+    //     text: {
+    //       primary: '#1D1B20',       // light.onSurface — near-black
+    //       secondary: '#49454E',     // light.onSurfaceVariant — medium grey
+    //     },
+    //     divider: '#CAC4CF',         // light.outlineVariant
+    //   },
+    // },
   },
 
   shape: {
