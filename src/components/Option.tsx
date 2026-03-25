@@ -178,8 +178,6 @@ export function Option ({ item, state, games, onSelect }: OptionProps) {
 // uses a plain Box with react-aria's optionProps instead, which handles focus
 // management correctly for accessible listbox items.
 //
-// Kept here for reference — safe to delete once you're confident the new approach
-// is stable.
 
 // import { useRef } from "react";
 // import { useOption } from "react-aria";
